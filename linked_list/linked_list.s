@@ -1,28 +1,28 @@
 .data
-start: .word 0              # Keeps track of current memory allocation address
-head_node: .word 0          # Points to the head node of the list
-tail_node: .word 0          # Points to the tail node of the list
+start: .word 0
+head_node: .word 0
+tail_node: .word 0
+prev_node: .word 0
 
 .text
-# Main Function to create nodes and build list
 _start:
-    # Allocate the first node ('R') and set it as head and tail
     addi a0, zero, 0x52     # 'R' in HEX 52 (ASCII 82)
-    addi a1, zero, 0        # First node, no previous node yet
     jal ra, alloc_node
     sw a0, head_node
     sw a0, tail_node
+    sw a0, prev_node
 
-    # Allocate the second node ('V') and add it to the tail
     addi a0, zero, 0x56     # 'V' in HEX 56 (ASCII 86)
-    jal ra, alloc_node      # Allocate new node ('V')
-    mv a1, a0               # a1 = address of newly allocated node
-    lw a0, head_node        # Load head node address into a0
-    jal ra, add_tail        # Add new node ('V') to the tail
-    sw a1, tail_node        # Update tail to the new node
+    jal ra, alloc_node
+    lw a1, prev_node
+    jal ra, make_circular
+    mv a1 a0
+    lw a0, head_node
+    jal ra, add_tail
+    sw a1, tail_node
+    sw a1, prev_node
 
-    # Allocate the third node ('I') and add it to the tail
-    addi a0, zero, 0x49     # 'I' in HEX 49 (ASCII 73)
+    addi a0, zero, 0x49
     jal ra, alloc_node      # Allocate new node ('I')
     mv a1, a0               # a1 = address of newly allocated node
     lw a0, head_node        # Load head node address into a0
@@ -51,12 +51,10 @@ _start:
 
 
 
+# a0 to be allocated
 alloc_node:
     la t0, start # Load the address of 'start' into t0
     lw t1, 0(t0) # Load the current value of 'start' into t1
-
-    addi t2, t1, 9 # Each node is 9 bytes
-    sw t2, 0(t0) # Store the updated address back to 'start'
 
     # value
     sb a0, 0(t1) # Store the value (8-bit) in the first byte of the node
@@ -67,8 +65,18 @@ alloc_node:
     # prev (initially points to itself)
     sw t1, 5(t1) # Initially set prev to point to itself (not NULL)
 
-    # If this is not the first node, update previous node's next and new node's prev
-    beq a1, zero, end_alloc # If a1 is zero, it's the first node, so skip the linking
+    mv a0, t1
+    jalr zero, ra, 0 # Return from the function
+
+
+
+# a1 previous node
+make_circular:
+    la t0, start # Load the address of 'start' into t0
+    lw t1, 0(t0) # Load the current value of 'start' into t1
+
+    addi t2, t1, 9 # Each node is 9 bytes
+    sw t2, 0(t0) # Store the updated address back to 'start'
 
     # Update the previous node's next to point to the new node
     sw t1, 1(a1)
@@ -76,21 +84,15 @@ alloc_node:
     # Update the new node's prev to point to the previous node
     sw a1, 5(t1)
 
-end_alloc:
-    mv a0, t1 # Return the address of the allocated node in a0
+end_circular:
 
     jalr zero, ra, 0 # Return from the function
 
 
 
-
-# Add Tail Function
-# This function adds the new node to the end of the list
+# a0: Address of head node
+# a1: Address of new node to be added to the tail
 add_tail:
-    # Args:
-    # a0: Address of head node
-    # a1: Address of new node to be added to the tail
-
     # Load the current tail node using the head node
     lw t2, 5(a0)            # Load the 'prev' of head, which is the current tail (t2 = tail)
 
