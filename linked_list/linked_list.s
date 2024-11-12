@@ -65,6 +65,9 @@ _start:
     la t0, prev_node
     sw a1, 0(t0)
 
+    lw a0, head_node
+    jal ra, print_list
+
     li a7, 10
     ecall
 
@@ -72,60 +75,78 @@ _start:
 
 # a0 to be allocated
 alloc_node:
-    la t0, start            # Load the address of 'start' into t0
-    lw t1, 0(t0)            # Load current value of 'start' (next free address)
+    la t0, start
+    lw t1, 0(t0)
 
-    # Store value in the first byte of the node
-    sb a0, 0(t1)            # Store the 8-bit value in byte 0 of the node
+    # value
+    sb a0, 0(t1)
 
-    #next
-    sw t1, 1(t1)            # Set `next` to point to itself (offset 1)
+    # next
+    sw t1, 1(t1) 
 
-    # Set `prev` pointer (self-reference initially)
-    sw t1, 5(t1)            # Set `prev` to point to itself (offset 5)
+    # prev
+    sw t1, 5(t1)
 
-    # Return new node address
-    mv a0, t1               # Return the current node address in a0
-    jalr zero, ra, 0        # Return from function
+    mv a0, t1
+    jalr zero, ra, 0
 
 
 
 # a1 previous node
 make_circular:
-    la t0, start            # Load address of 'start' into t0
-    lw t1, 0(t0)            # Load current value of 'start' (new node address)
+    la t0, start
+    lw t1, 0(t0)
 
-    addi t2, t1, 9          # Calculate the address for the next node
-    sw t2, 0(t0)            # Update `start` with the new address
+    addi t2, t1, 9
+    sw t2, 0(t0)
 
-    # Update previous node's `next` to point to new node
-    sw t1, 1(a1)            # a1->next = t1 (new node)
+    sw t1, 1(a1)            # a1->next = t1
 
-    # Update new node's `prev` to point to previous node
-    sw a1, 5(t1)            # t1->prev = a1 (previous node)
+    sw a1, 5(t1)            # t1->prev = a1
 
-    # Return to caller
-    jalr zero, ra, 0        # Return from function
+    jalr zero, ra, 0 
 
 
 
 # a0: Address of head node
 # a1: Address of new node to be added to the tail
 add_tail:
-    # Load the current tail node using the head node
-    lw t2, 5(a0)            # Load the 'prev' of head, which is the current tail (t2 = tail)
+    lw t2, 5(a0)            # Load the 'prev' of head
 
-    # Update the current tail's next to point to the new node (a1)
-    sw a1, 1(t2)            # t2->next = a1 (current tail's next points to new node)
+    sw a1, 1(t2)            # t2->next = a1
 
-    # Update the new node's prev to point to the current tail (t2)
-    sw t2, 5(a1)            # a1->prev = t2 (new node's prev points to current tail)
+    sw t2, 5(a1)            # a1->prev = t2
 
-    # Update the new node's next to point to the head (a0)
-    sw a0, 1(a1)            # a1->next = a0 (new node's next points to head)
+    sw a0, 1(a1)            # a1->next = a0
 
-    # Update the head's prev to point to the new node (a1)
-    sw a1, 5(a0)            # a0 ->prev = a1 (head's prev points to new node)
+    sw a1, 5(a0)            # a0 ->prev = a1
 
-    # Return (No need to modify a0 since it's not changing the list address)
-    jalr zero, ra, 0        # Return from the function
+    jalr zero, ra, 0 
+
+
+
+# a0: Address of head node
+print_list:
+    mv t0, a0
+    li t1, 0               # Initialize byte count to 0
+    mv t3, a0              # Store head node address in t3 to detect when we loop back
+
+print_loop:
+    lb a1, 0(t0)
+    mv a0, a1
+    li a7, 11
+    ecall
+    bltz a0, print_fail
+
+    addi t1, t1, 1
+
+    # Move to the next node
+    lw t0, 1(t0)
+    bne t0, t3, print_loop # Continue if current node is not head node
+
+    mv a0, t1              # Return total byte count in a0
+    jalr zero, ra, 0
+
+print_fail:
+    li a0, -1              # Return -1 on failure
+    jalr zero, ra, 0
