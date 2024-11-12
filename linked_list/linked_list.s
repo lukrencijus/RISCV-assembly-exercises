@@ -22,30 +22,36 @@ _start:
     sw a1, tail_node
     sw a1, prev_node
 
-    addi a0, zero, 0x49
-    jal ra, alloc_node      # Allocate new node ('I')
-    mv a1, a0               # a1 = address of newly allocated node
-    lw a0, head_node        # Load head node address into a0
-    jal ra, add_tail        # Add new node ('I') to the tail
-    sw a1, tail_node        # Update tail to the new node
+    addi a0, zero, 0x49     # 'I' in HEX 49 (ASCII 73)
+    jal ra, alloc_node 
+    lw a1, prev_node
+    jal ra, make_circular
+    mv a1, a0
+    lw a0, head_node
+    jal ra, add_tail
+    sw a1, tail_node
+    sw a1, prev_node
 
-    # Allocate the fourth node ('S') and add it to the tail
     addi a0, zero, 0x53     # 'S' in HEX 53 (ASCII 83)
-    jal ra, alloc_node      # Allocate new node ('S')
-    mv a1, a0               # a1 = address of newly allocated node
-    lw a0, head_node        # Load head node address into a0
-    jal ra, add_tail        # Add new node ('S') to the tail
-    sw a1, tail_node        # Update tail to the new node
+    jal ra, alloc_node
+    lw a1, prev_node
+    jal ra, make_circular
+    mv a1, a0
+    lw a0, head_node
+    jal ra, add_tail
+    sw a1, tail_node
+    sw a1, prev_node
 
-    # Allocate the fifth node ('C') and add it to the tail
     addi a0, zero, 0x43     # 'C' in HEX 43 (ASCII 67)
-    jal ra, alloc_node      # Allocate new node ('C')
-    mv a1, a0               # a1 = address of newly allocated node
-    lw a0, head_node        # Load head node address into a0
-    jal ra, add_tail        # Add new node ('C') to the tail
-    sw a1, tail_node        # Update tail to the new node
+    jal ra, alloc_node
+    lw a1, prev_node
+    jal ra, make_circular
+    mv a1, a0
+    lw a0, head_node
+    jal ra, add_tail
+    sw a1, tail_node
+    sw a1, prev_node
 
-    # End of program
     li a7, 10
     ecall
 
@@ -53,40 +59,40 @@ _start:
 
 # a0 to be allocated
 alloc_node:
-    la t0, start # Load the address of 'start' into t0
-    lw t1, 0(t0) # Load the current value of 'start' into t1
+    la t0, start            # Load the address of 'start' into t0
+    lw t1, 0(t0)            # Load current value of 'start' (next free address)
 
-    # value
-    sb a0, 0(t1) # Store the value (8-bit) in the first byte of the node
+    # Store value in the first byte of the node
+    sb a0, 0(t1)            # Store the 8-bit value in byte 0 of the node
 
-    # next (initially points to itself)
-    sw t1, 1(t1) # Initially set next to point to itself (not NULL)
+    addi t2, t1, 9          # Calculate the address for the next node
+    sw t2, 0(t0)            # Update `start` with the new address
 
-    # prev (initially points to itself)
-    sw t1, 5(t1) # Initially set prev to point to itself (not NULL)
+    #next
+    sw t1, 1(t1)            # Set `next` to point to itself (offset 1)
 
-    mv a0, t1
-    jalr zero, ra, 0 # Return from the function
+    # Set `prev` pointer (self-reference initially)
+    sw t1, 5(t1)            # Set `prev` to point to itself (offset 5)
+
+    # Return new node address
+    mv a0, t1               # Return the current node address in a0
+    jalr zero, ra, 0        # Return from function
 
 
 
 # a1 previous node
 make_circular:
-    la t0, start # Load the address of 'start' into t0
-    lw t1, 0(t0) # Load the current value of 'start' into t1
+    la t0, start            # Load address of 'start' into t0
+    lw t1, 0(t0)            # Load current value of 'start' (new node address)
 
-    addi t2, t1, 9 # Each node is 9 bytes
-    sw t2, 0(t0) # Store the updated address back to 'start'
+    # Update previous node's `next` to point to new node
+    sw t1, 1(a1)            # a1->next = t1 (new node)
 
-    # Update the previous node's next to point to the new node
-    sw t1, 1(a1)
+    # Update new node's `prev` to point to previous node
+    sw a1, 5(t1)            # t1->prev = a1 (previous node)
 
-    # Update the new node's prev to point to the previous node
-    sw a1, 5(t1)
-
-end_circular:
-
-    jalr zero, ra, 0 # Return from the function
+    # Return to caller
+    jalr zero, ra, 0        # Return from function
 
 
 
