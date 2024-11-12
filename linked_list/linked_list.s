@@ -8,9 +8,12 @@ prev_node: .word 0
 _start:
     addi a0, zero, 0x52     # 'R' in HEX 52 (ASCII 82)
     jal ra, alloc_node
-    sw a0, head_node
-    sw a0, tail_node
-    sw a0, prev_node
+    la t0, head_node
+    sw a0, 0(t0)
+    la t0, tail_node
+    sw a0, 0(t0)
+    la t0, prev_node
+    sw a0, 0(t0)
     lw a1, prev_node
     jal ra, make_circular
 
@@ -21,8 +24,10 @@ _start:
     mv a1 a0
     lw a0, head_node
     jal ra, add_tail
-    sw a1, tail_node
-    sw a1, prev_node
+    la t0, tail_node
+    sw a1, 0(t0)
+    la t0, prev_node
+    sw a1, 0(t0)
 
     addi a0, zero, 0x49     # 'I' in HEX 49 (ASCII 73)
     jal ra, alloc_node 
@@ -31,8 +36,10 @@ _start:
     mv a1, a0
     lw a0, head_node
     jal ra, add_tail
-    sw a1, tail_node
-    sw a1, prev_node
+    la t0, tail_node
+    sw a1, 0(t0)
+    la t0, prev_node
+    sw a1, 0(t0)
 
     addi a0, zero, 0x53     # 'S' in HEX 53 (ASCII 83)
     jal ra, alloc_node
@@ -41,8 +48,10 @@ _start:
     mv a1, a0
     lw a0, head_node
     jal ra, add_tail
-    sw a1, tail_node
-    sw a1, prev_node
+    la t0, tail_node
+    sw a1, 0(t0)
+    la t0, prev_node
+    sw a1, 0(t0)
 
     addi a0, zero, 0x43     # 'C' in HEX 43 (ASCII 67)
     jal ra, alloc_node
@@ -51,8 +60,10 @@ _start:
     mv a1, a0
     lw a0, head_node
     jal ra, add_tail
-    sw a1, tail_node
-    sw a1, prev_node
+    la t0, tail_node
+    sw a1, 0(t0)
+    la t0, prev_node
+    sw a1, 0(t0)
 
     li a7, 10
     ecall
