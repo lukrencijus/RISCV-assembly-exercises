@@ -1,6 +1,7 @@
 .data
 start: .word 0
 head_node: .word 0
+tail_node: .word 0
 
 .text
 _start:
@@ -37,6 +38,13 @@ _start:
     la a0, head_node
     lw a0, 0(a0)
     jal ra, add_tail
+
+    # Fix circular links
+    la a0, head_node
+    lw a0, 0(a0)
+    jal ra, make_circular
+
+
     
     la a0, head_node
     lw a0, 0(a0)
@@ -57,10 +65,10 @@ alloc_node:
     sb a0, 0(t1)
 
     # next
-    sw t1, 1(t1) # issaugoti kad rodytu i next node
+    sw t1, 1(t1)
 
     # prev
-    sw t1, 5(t1) # issaugoti kad rodytu i prev node
+    sw t1, 5(t1)
 
     mv a0, t1
     jalr zero, ra, 0
@@ -81,36 +89,25 @@ find_tail:
 set_tail:
     sw a1, 1(t0)
     sw t0, 5(a1)
-    sw a1, 1(a1)    
     jalr zero, ra, 0
 
 
+# sitai funkcijai reikia paduoti:
+# a0 head node
+# t2 previuos node
+make_circular:
+    mv t0, a0                  # t0 = head_node
+    li t2, 0                   # t2 = previous node, initialized to 0
 
-print_list:
-    mv t1, a0
-        
+connect_nodes:
+    lw t1, 1(t0)               # t1 = next of current node (load word from offset 1)
+    sw t2, 5(t0)               # current_node.prev = t2 (store previous node in current's prev)
+    beq t1, t0, finalize_circular # If next == head_node, this is the tail
+    mv t2, t0                  # Update previous node (t2 = current node)
+    mv t0, t1                  # Move to the next node
+    j connect_nodes            # Repeat loop
 
-print_loop:
-    lw t3, 1(t1) # next
-    lb a1, 0(t1)
-    
-    addi a7, zero, 64
-    addi a0, zero, 1
-    addi a2, a1, 0
-    ecall
-
-    blt a0, zero, print_fail
-
-    add t2, t2, a0
-
-    beq t1, t3, print_done # if next = same node
-    mv t1, t3
-    j print_loop
-
-print_fail:
-    li a0, -1
-    jalr zero, ra, 0
-
-print_done:
-    mv a0, t2
-    jalr zero, ra, 0
+finalize_circular:
+    sw a0, 1(t0)               # tail.next = head_node (store head_node address in tail.next)
+    sw t0, 5(a0)               # head_node.prev = tail (store tail address in head_node.prev)
+    jalr zero, ra, 0           # Return
