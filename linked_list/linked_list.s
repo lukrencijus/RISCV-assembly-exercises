@@ -11,6 +11,8 @@ _start:
     sw a0, head_node
     sw a0, tail_node
     sw a0, prev_node
+    lw a1, prev_node
+    jal ra, make_circular
 
     addi a0, zero, 0x56     # 'V' in HEX 56 (ASCII 86)
     jal ra, alloc_node
@@ -65,9 +67,6 @@ alloc_node:
     # Store value in the first byte of the node
     sb a0, 0(t1)            # Store the 8-bit value in byte 0 of the node
 
-    addi t2, t1, 9          # Calculate the address for the next node
-    sw t2, 0(t0)            # Update `start` with the new address
-
     #next
     sw t1, 1(t1)            # Set `next` to point to itself (offset 1)
 
@@ -84,6 +83,9 @@ alloc_node:
 make_circular:
     la t0, start            # Load address of 'start' into t0
     lw t1, 0(t0)            # Load current value of 'start' (new node address)
+
+    addi t2, t1, 9          # Calculate the address for the next node
+    sw t2, 0(t0)            # Update `start` with the new address
 
     # Update previous node's `next` to point to new node
     sw t1, 1(a1)            # a1->next = t1 (new node)
