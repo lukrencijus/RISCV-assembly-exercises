@@ -69,31 +69,40 @@ _start:
 
     lw a0, head_node
     jal ra, print_list
+    mv t6, a0
+    addi t5, zero, -1
+    beq t6, t5, end
 
 
 
     lw a0, head_node
     li a1, 0x56            # 'V' in HEX 56 (ASCII 86)
     jal ra, find_node
+    addi t5, zero, -1
+    beq t6, t5, end
     
     mv a1, a0
     lw a0, head_node
     jal ra, del_node
-    # updated head node
-
-    #new line and print updated list
+    addi t5, zero, -1
+    beq t6, t5, end
+    la t0, head_node
+    sw a0, 0(t0)
+    
+    # comment the next line, if you want to print updated list
+    # beq zero, zero, end 
     li a0, 10
     li a7, 11
     ecall
     lw a0, head_node
     jal ra, print_list
+    mv t6, a0
+    addi t5, zero, -1
+    beq t6, t5, end
 
-    li a7, 10
-    ecall
-
-not_found:
-    li a0, -1
-    li a7, 10
+end:
+    mv a0, t6
+    li a7, 93
     ecall
 
 
@@ -153,8 +162,8 @@ add_tail:
 # a0: address of head node
 print_list:
     mv t0, a0
-    li t1, 0               # Initialize byte count to 0
-    mv t3, a0              # Store head node address in t3 to detect when we loop back
+    li t1, 0
+    mv t3, a0
 
 print_loop:
     lb a1, 0(t0)
@@ -167,13 +176,19 @@ print_loop:
 
     # Move to the next node
     lw t0, 1(t0)
-    bne t0, t3, print_loop # Continue if current node is not head node
-
-    mv a0, t1              # Return total byte count in a0
+    bne t0, t3, print_loop
+    li a0, 0
     jalr zero, ra, 0
 
+
 print_fail:
-    li a0, -1              # Return -1 on failure
+    beq t0, zero, continue
+    j print_bytes
+continue:
+    li a0, -1
+    jalr zero, ra, 0
+print_bytes:
+    mv a0, t1
     jalr zero, ra, 0
 
 
@@ -181,13 +196,13 @@ print_fail:
 # a0: address of head node
 # a1: address of node to be deleted
 del_node:
-    mv t2, a0             # Start from the head node
-    mv t3, a0             # Store the head for loop detection
+    mv t2, a0
 
 del_loop:
-    beq t2, a1, found_node    # Node to delete found
-    lw t2, 1(t2)              # Move to the next node
-    beq t2, t3, not_found     # Loop back to head, node not found
+    beq t2, a1, found_node
+    lw t2, 1(t2)
+    beq t2, a0, not_found
+    j del_loop
 
 found_node:
     lw t4, 5(t2)              # t4 = node->prev
@@ -196,31 +211,32 @@ found_node:
     sw t5, 1(t4)              # t4->next = t5
     sw t4, 5(t5)              # t5->prev = t4
 
-    beq t2, a0, update_head   # If the deleted node is the head, update head
-    jalr zero, ra, 0          # Return original head
-
-update_head:
-    sw t5, 0(a0)              # Update head to the next node
-    mv a0, t5                 # Return new head
+    beq t2, a0, update_head
     jalr zero, ra, 0
 
-    # return -1 if not found
+update_head:
+    sw t5, 0(a0)
+    mv a0, t5
+    jalr zero, ra, 0
+
+not_found:
+    addi t6, zero, -1
+    jalr zero, ra, 0
 
 
 
 # a0: address of head node
 # a1: value of node to find
 find_node:
-    mv t2, a0                # Start at the head
-    mv t3, a0                # Loop detection
+    mv t2, a0
 
 find_loop:
-    lb t4, 0(t2)             # Load value of current node
-    beq t4, a1, return_node  # If value matches, return address
-    lw t2, 1(t2)             # Move to next node
-    beq t2, t3, not_found    # If loop back to head, not found
+    lb t4, 0(t2)
+    beq t4, a1, return_node
+    lw t2, 1(t2)
+    beq t2, a0, not_found
     j find_loop
 
 return_node:
-    mv a0, t2                # Return node address
+    mv a0, t2
     jalr zero, ra, 0
