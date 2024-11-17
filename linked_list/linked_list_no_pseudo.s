@@ -9,9 +9,11 @@ _start:
     # create head node with ASCII value 'R'
     addi a0, zero, 0x52         # 'R' in HEX 52 (ASCII 82)
     jal ra, alloc_node
-    la t0, head_node
+    lui t0, %hi(head_node)
+    addi t0, t0, %lo(head_node)
     sw a0, 0(t0)
-    la t0, tail_node
+    lui t0, %hi(tail_node)
+    addi t0, t0, %lo(tail_node)
     sw a0, 0(t0)
     jal ra, add_tail
 
@@ -44,11 +46,12 @@ _start:
     lw a0, head_node
     jal ra, del_node
     bltz a0, end
-    la t0, head_node
+    lui t0, %hi(head_node)
+    addi t0, t0, %lo(head_node)
     sw a0, 0(t0)
 
     # comment the next line, if you want to print updated list
-    # j end 
+    # jal zero, end
     addi a0, zero, 10
     addi a7, zero, 11
     ecall
@@ -68,16 +71,18 @@ create_node:
     addi a1, a0, 0
     lw a0, head_node
     jal ra, add_tail
-    la t0, tail_node
+    lui t0, %hi(tail_node)
+    addi t0, t0, %lo(tail_node)
     sw a1, 0(t0)        # save current node as tail node
     addi ra, t5, 0      # load back return address
-    jr ra
+    jalr zero, ra, 0
 
 
 
 # a0: address of node to be allocated
 alloc_node:
-    la t0, start
+    lui t0, %hi(start)
+    addi t0, t0, %lo(start)
     lw t1, 0(t0)
 
     # value
@@ -97,7 +102,8 @@ alloc_node:
 # a0: address of head node
 # a1: address of new node to be added to the tail
 add_tail:
-    la t0, start
+    lui t0, %hi(start)
+    addi t0, t0, %lo(start)
     lw t1, 0(t0)
     addi t2, t1, 9          # prepare the address of the next node
     sw t2, 0(t0)            # (this updated address wil be used in the next function call)
@@ -134,7 +140,7 @@ print_loop:
 
 print_fail:
     beq t0, zero, continue
-    j print_bytes
+    jal zero, print_bytes
 
 continue:
     addi a0, zero, -1
@@ -156,7 +162,7 @@ find_loop:
     beq t4, a1, return_node
     lw t2, 1(t2)
     beq t2, a0, not_found
-    j find_loop
+    jal zero, find_loop
 
 return_node:
     addi a0, t2, 0
@@ -173,7 +179,7 @@ del_loop:
     beq t2, a1, found_node
     lw t2, 1(t2)
     beq t2, a0, not_found
-    j del_loop
+    jal zero, del_loop
 
 found_node:
     lw t4, 5(t2)              # t4 = node we are deleting(prev)
