@@ -35,12 +35,12 @@ _start:
 
     # find the node with 'V' value from the list
     lw a0, head_node
-    li a1, 0x56            # 'V' in HEX 56 (ASCII 86)
+    addi a1, zero, 0x56     # 'V' in HEX 56 (ASCII 86)
     jal ra, find_node
     bltz a0, end
     
     # remove the node with 'V' value from the list
-    mv a1, a0
+    addi a1, a0, 0
     lw a0, head_node
     jal ra, del_node
     bltz a0, end
@@ -49,15 +49,15 @@ _start:
 
     # comment the next line, if you want to print updated list
     # j end 
-    li a0, 10
-    li a7, 11
+    addi a0, zero, 10
+    addi a7, zero, 11
     ecall
     lw a0, head_node
     jal ra, print_list
 
 # exit
 end:
-    li a7, 93
+    addi a7, zero, 93
     ecall
 
 
@@ -65,7 +65,7 @@ end:
 create_node:
     addi t5, ra, 0      # save return address
     jal ra, alloc_node
-    mv a1, a0
+    addi a1, a0, 0
     lw a0, head_node
     jal ra, add_tail
     la t0, tail_node
@@ -89,7 +89,7 @@ alloc_node:
     # prev
     sw t1, 5(t1)
 
-    mv a0, t1
+    addi a0, t1, 0
     jalr zero, ra, 0
 
 
@@ -113,14 +113,14 @@ add_tail:
 
 # a0: address of head node
 print_list:
-    mv t0, a0
-    li t1, 0
-    mv t3, a0
+    addi t0, a0, 0
+    addi t1, zero, 0
+    addi t3, a0, 0
 
 print_loop:
     lb a1, 0(t0)
-    mv a0, a1
-    li a7, 11
+    addi a0, a1, 0
+    addi a7, zero, 11
     ecall
     bltz a0, print_fail
 
@@ -129,7 +129,7 @@ print_loop:
     # move to the next node
     lw t0, 1(t0)
     bne t0, t3, print_loop
-    li a0, 0
+    addi a0, zero, 0
     jalr zero, ra, 0
 
 print_fail:
@@ -137,11 +137,11 @@ print_fail:
     j print_bytes
 
 continue:
-    li a0, -1
+    addi a0, zero, -1
     jalr zero, ra, 0
 
 print_bytes:
-    mv a0, t1
+    addi a0, t1, 0
     jalr zero, ra, 0
 
 
@@ -149,7 +149,7 @@ print_bytes:
 # a0: address of head node
 # a1: value of node to find
 find_node:
-    mv t2, a0
+    addi t2, a0, 0
 
 find_loop:
     lb t4, 0(t2)
@@ -159,7 +159,7 @@ find_loop:
     j find_loop
 
 return_node:
-    mv a0, t2
+    addi a0, t2, 0
     jalr zero, ra, 0
 
 
@@ -167,7 +167,7 @@ return_node:
 # a0: address of head node
 # a1: address of node to be deleted
 del_node:
-    mv t2, a0
+    addi t2, a0, 0
 
 del_loop:
     beq t2, a1, found_node
@@ -185,7 +185,7 @@ found_node:
     jalr zero, ra, 0
 
 update_head:
-    mv a0, t5
+    addi a0, t5, 0
     jalr zero, ra, 0
 
 not_found:
