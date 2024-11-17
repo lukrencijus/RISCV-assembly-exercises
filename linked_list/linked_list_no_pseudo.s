@@ -33,19 +33,19 @@ _start:
     # traverse the list nodes and print their value
     lw a0, head_node
     jal ra, print_list
-    bltz a0, end
+    blt a0, zero, end
 
     # find the node with 'V' value from the list
     lw a0, head_node
     addi a1, zero, 0x56     # 'V' in HEX 56 (ASCII 86)
     jal ra, find_node
-    bltz a0, end
+    blt a0, zero, end
     
     # remove the node with 'V' value from the list
     addi a1, a0, 0
     lw a0, head_node
     jal ra, del_node
-    bltz a0, end
+    blt a0, zero, end
     lui t0, %hi(head_node)
     addi t0, t0, %lo(head_node)
     sw a0, 0(t0)
@@ -128,7 +128,7 @@ print_loop:
     addi a0, a1, 0
     addi a7, zero, 11
     ecall
-    bltz a0, print_fail
+    blt a0, zero, print_fail
 
     addi t1, t1, 1
 
