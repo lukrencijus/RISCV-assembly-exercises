@@ -2,108 +2,78 @@
 start: .word 0
 head_node: .word 0
 tail_node: .word 0
-prev_node: .word 0
 
 .text
+
 _start:
-    addi a0, zero, 0x52     # 'R' in HEX 52 (ASCII 82)
+    # create head node with ASCII value 'R'
+    addi a0, zero, 0x52         # 'R' in HEX 52 (ASCII 82)
     jal ra, alloc_node
     la t0, head_node
     sw a0, 0(t0)
     la t0, tail_node
     sw a0, 0(t0)
-    la t0, prev_node
-    sw a0, 0(t0)
-    lw a1, prev_node
     jal ra, make_circular
 
-    addi a0, zero, 0x56     # 'V' in HEX 56 (ASCII 86)
-    jal ra, alloc_node
-    lw a1, prev_node
-    jal ra, make_circular
-    mv a1 a0
-    lw a0, head_node
-    jal ra, add_tail
-    la t0, tail_node
-    sw a1, 0(t0)
-    la t0, prev_node
-    sw a1, 0(t0)
+    # add nodes with ASCII values 'V', 'I', 'S', 'C' to the tail
+    addi a0, zero, 0x56         # 'V' in HEX 56 (ASCII 86)
+    jal ra, create_node
 
-    addi a0, zero, 0x49     # 'I' in HEX 49 (ASCII 73)
-    jal ra, alloc_node 
-    lw a1, prev_node
-    jal ra, make_circular
-    mv a1, a0
-    lw a0, head_node
-    jal ra, add_tail
-    la t0, tail_node
-    sw a1, 0(t0)
-    la t0, prev_node
-    sw a1, 0(t0)
+    addi a0, zero, 0x49         # 'I' in HEX 49 (ASCII 73)
+    jal ra, create_node
 
-    addi a0, zero, 0x53     # 'S' in HEX 53 (ASCII 83)
-    jal ra, alloc_node
-    lw a1, prev_node
-    jal ra, make_circular
-    mv a1, a0
-    lw a0, head_node
-    jal ra, add_tail
-    la t0, tail_node
-    sw a1, 0(t0)
-    la t0, prev_node
-    sw a1, 0(t0)
+    addi a0, zero, 0x53         # 'S' in HEX 53 (ASCII 83)
+    jal ra, create_node
 
-    addi a0, zero, 0x43     # 'C' in HEX 43 (ASCII 67)
-    jal ra, alloc_node
-    lw a1, prev_node
-    jal ra, make_circular
-    mv a1, a0
-    lw a0, head_node
-    jal ra, add_tail
-    la t0, tail_node
-    sw a1, 0(t0)
-    la t0, prev_node
-    sw a1, 0(t0)
+    addi a0, zero, 0x43         # 'C' in HEX 43 (ASCII 67)
+    jal ra, create_node
 
-
-
+    # traverse the list nodes and print their value
     lw a0, head_node
     jal ra, print_list
-    mv t6, a0
-    addi t5, zero, -1
-    beq t6, t5, end
+    bltz a0, end
 
-
-
+    # find the node with 'V' value from the list
     lw a0, head_node
     li a1, 0x56            # 'V' in HEX 56 (ASCII 86)
     jal ra, find_node
-    addi t5, zero, -1
-    beq t6, t5, end
+    bltz a0, end
     
+    # remove the node with 'V' value from the list
     mv a1, a0
     lw a0, head_node
     jal ra, del_node
-    addi t5, zero, -1
-    beq t6, t5, end
+    bltz a0, end
     la t0, head_node
     sw a0, 0(t0)
-    
+
     # comment the next line, if you want to print updated list
-    # beq zero, zero, end 
+    # j end 
     li a0, 10
     li a7, 11
     ecall
     lw a0, head_node
     jal ra, print_list
-    mv t6, a0
-    addi t5, zero, -1
-    beq t6, t5, end
 
+# exit
 end:
-    mv a0, t6
     li a7, 93
     ecall
+
+
+
+create_node:
+    addi t5, ra, 0
+    jal ra, alloc_node
+    lw a1, tail_node
+    jal ra, make_circular
+    mv a1, a0
+    lw a0, head_node
+    jal ra, add_tail
+    la t0, tail_node
+    sw a1, 0(t0)
+    addi ra, t5, 0
+    jr ra
 
 
 
@@ -145,7 +115,7 @@ make_circular:
 # a0: address of head node
 # a1: address of new node to be added to the tail
 add_tail:
-    lw t2, 5(a0)            # Load the 'prev' of head
+    lw t2, 5(a0)            # load the 'prev' of head
 
     sw a1, 1(t2)            # t2->next = a1
 
@@ -174,19 +144,20 @@ print_loop:
 
     addi t1, t1, 1
 
-    # Move to the next node
+    # move to the next node
     lw t0, 1(t0)
     bne t0, t3, print_loop
     li a0, 0
     jalr zero, ra, 0
 
-
 print_fail:
     beq t0, zero, continue
     j print_bytes
+
 continue:
     li a0, -1
     jalr zero, ra, 0
+
 print_bytes:
     mv a0, t1
     jalr zero, ra, 0
@@ -220,7 +191,7 @@ update_head:
     jalr zero, ra, 0
 
 not_found:
-    addi t6, zero, -1
+    addi a0, zero, -1
     jalr zero, ra, 0
 
 
