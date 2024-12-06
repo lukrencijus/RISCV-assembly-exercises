@@ -1,7 +1,3 @@
-# Task: Implement separate functions for `push` and `pop` in RISC-V assembly. 
-# These functions will handle the stack operations independently,
-# allowing you to push a value onto the stack or pop a value from the stack into a register.
-
 # X=A+B-C-10+D
 
 .data
