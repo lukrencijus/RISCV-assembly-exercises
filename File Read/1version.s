@@ -7,10 +7,6 @@ filename:
 bufferf:
     .space 2048 # buffer space (2kb)
 
-error_msg:
-	.asciz "Error: Read failed.\n"
-    # this is not used
-
 .text
 .globl _start
 
@@ -22,7 +18,6 @@ _start:
     li a0, -100                # AT_FDCWD
     la a1, filename            # File name
     li a2, 0                   # O_RDONLY
-    # li a3, 0                   # Mode (unused for O_RDONLY)
     li a7, 56                  # Syscall number for openat
     ecall
     bltz a0, exit_error        # Exit if open failed
@@ -39,18 +34,16 @@ read_loop:
     beqz a0, close_file        # End of file (read 0 bytes)
     mv a2,a0                   # Bytes to print
 
-    # Count spaces in the buffer
-    li t3, 0             # Clear space counter (t3 will count spaces)
-    li t4, 0             # Clear loop index (t4 will index through buffer)
-
+    li t3, 0             # count words
+    li t5, 0             # index through buffer
 
     count_spaces:
-    lb t5, 0(t1)         # Load byte from buffer[t4]
+    lb t5, 0(t1)         # Load byte from buffer
     beqz t5, done_count  # If the byte is 0 (end of string), exit loop
     li t6, 32                  # space in ASCII
     beq t5, t6, increment_space  # If the byte is a space (' '), increment counter
 
-    # Increment index (t4) to check next byte
+    # Increment index to check next byte
     addi t1, t1, 1       # Move buffer pointer to next byte
     j count_spaces
 
@@ -60,14 +53,9 @@ read_loop:
     j count_spaces
 
 done_count:
-    #sw t3, 0(t2)
-
     # Write to stdout
     li a0, 1                   # Stdout file descriptor
-
-    # we are missing this
-    la t1, bufferf
-    mv a1, t1                  # Buffer address
+    la a1, bufferf             # load buffer again
     li a7, 64                  # Syscall number for write
     ecall
     bltz a0, write_error       # Exit if write failed
@@ -80,6 +68,7 @@ close_file:
     li a7, 57                  # Syscall number for close
     ecall
 
+    # print the word count
     add a0, zero, t3
     la a1, bufferf
     call itoa
@@ -101,6 +90,7 @@ exit_error:
     li a7, 93
     ecall
 
+# integer to ASCII
 itoa:
     # Simple conversion for a two-digit number
     li t0, 10               # Load divisor 10 into t0
