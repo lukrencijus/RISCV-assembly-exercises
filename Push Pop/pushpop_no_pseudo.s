@@ -1,3 +1,5 @@
+# X=A+B-C-10+D
+
 .data
 A:    .word 1
 B:    .word 2
