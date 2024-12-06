@@ -27,7 +27,7 @@ read_loop:
     # Read from file
     mv a0, t0                  # File descriptor
     mv a1, t1                  # Buffer address
-    li a2, 1024                # Buffer size
+    li a2, 1024                # Buffer size (1kb)
     li a7, 63                  # Syscall number for read
     ecall
     bltz a0, read_error        # Exit if read failed
@@ -35,21 +35,34 @@ read_loop:
     mv a2,a0                   # Bytes to print
 
     li t3, 0             # count words
+    li t4, 0             # count sentences
     li t5, 0             # index through buffer
 
-    count_spaces:
+count_spaces:
     lb t5, 0(t1)         # Load byte from buffer
     beqz t5, done_count  # If the byte is 0 (end of string), exit loop
-    li t6, 32                  # space in ASCII
-    beq t5, t6, increment_space  # If the byte is a space (' '), increment counter
+
+    li t6, 32            # space in ASCII
+    beq t5, t6, increment_space
+    li t6, 46            # . in ASCII
+    beq t5, t6, increment_sentence
+    li t6, 33            # ! in ASCII
+    beq t5, t6, increment_sentence
+    li t6, 63            # ? in ASCII
+    beq t5, t6, increment_sentence
 
     # Increment index to check next byte
     addi t1, t1, 1       # Move buffer pointer to next byte
     j count_spaces
 
-    increment_space:
+increment_space:
     addi t3, t3, 1       # Increment space counter
     addi t1, t1, 1       # Move buffer pointer to next byte
+    j count_spaces
+
+increment_sentence:
+    addi t4, t4, 1
+    addi t1, t1, 1
     j count_spaces
 
 done_count:
@@ -70,6 +83,16 @@ close_file:
 
     # print the word count
     add a0, zero, t3
+    la a1, bufferf
+    call itoa
+    li a7, 64
+    li a0, 1
+    la a1, bufferf
+    li a2, 3
+    ecall
+
+    # print the sentence count
+    add a0, zero, t4
     la a1, bufferf
     call itoa
     li a7, 64
