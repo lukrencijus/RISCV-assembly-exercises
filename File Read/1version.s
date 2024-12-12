@@ -39,6 +39,7 @@ read_loop:
     li t5, 0             # index through buffer
 
 count_spaces:
+    mv s1, t5            # Load previous byte 
     lb t5, 0(t1)         # Load byte from buffer
     beqz t5, done_count  # If the byte is 0 (end of string), exit loop
 
@@ -51,11 +52,13 @@ count_spaces:
     li t6, 63            # ? in ASCII
     beq t5, t6, increment_sentence
 
+    skip:
     # Increment index to check next byte
     addi t1, t1, 1       # Move buffer pointer to next byte
     j count_spaces
 
 increment_space:
+    beq s1, t5, skip
     addi t3, t3, 1       # Increment space counter
     addi t1, t1, 1       # Move buffer pointer to next byte
     j count_spaces
