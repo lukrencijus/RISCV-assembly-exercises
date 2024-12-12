@@ -44,6 +44,7 @@ read_loop:
     li s4, 'Z'                 # Load ASCII value of 'Z'
     li s5, 'a'                 # Load ASCII value of 'a'
     li s6, 'z'                 # Load ASCII value of 'z'
+    li s7, 0                   # Uppercase counter
 
 count_spaces:
     mv s1, t5                  # Load previous byte 
@@ -59,6 +60,10 @@ count_spaces:
     beq t5, t6, increment_sentence
     li t6, 63                  # ? in ASCII
     beq t5, t6, increment_sentence
+
+    blt t5, s3, skip
+    bgt t5, s4, skip
+    addi s7, s7, 1           # Increment uppercase counter
 
     skip:
     addi t1, t1, 1             # Move buffer pointer to next byte
@@ -107,6 +112,16 @@ close_file:
 
     # print the sentence count
     add a0, zero, t4
+    la a1, bufferf
+    call itoa
+    li a7, 64
+    li a0, 1
+    la a1, bufferf
+    li a2, 3
+    ecall
+
+    # print the uppercase letter count
+    add a0, zero, s7
     la a1, bufferf
     call itoa
     li a7, 64
