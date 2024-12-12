@@ -34,7 +34,7 @@ read_loop:
     beqz a0, close_file        # End of file (read 0 bytes)
     mv a2,a0                   # Bytes to print
 
-    li t3, 0             # count words
+    li t3, 1             # count words
     li t4, 0             # count sentences
     li t5, 0             # index through buffer
     li s1, 0             # previous byte
@@ -68,10 +68,13 @@ increment_space:
     j count_spaces
 
 increment_sentence:
-    beq s2, zero, skip
-    beq s1, t5, skip
-    addi t4, t4, 1
+    beq s2, zero, skip     # if bit is the first bit - we skip
+    beq s1, t5, skip       # if bit is the same as last bit - we skip
     addi t1, t1, 1
+    lb t5, 0(t1)           # load next bit
+    li t6, 32              # space in ASCII
+    bne t5, t6, skip       # if next bit is not space - we do not have a sentence
+    addi t4, t4, 1         # we got a sentence
     j count_spaces
 
 done_count:
