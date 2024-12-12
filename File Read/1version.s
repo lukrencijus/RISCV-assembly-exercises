@@ -77,7 +77,24 @@ increment_sentence:
     addi t4, t4, 1         # we got a sentence
     j count_spaces
 
+########################neveikia
+add_last:
+    addi t4, t4, 1       # Increment sentence counter
+    j write
+
 done_count:
+    # Check if last bit was .!? - increment sentence counter
+    lb s1, 0(t1)           # load last bit
+    li t6, 46            # . in ASCII
+    beq s1, t6, add_last
+    li t6, 33            # ! in ASCII
+    beq s1, t6, add_last
+    li t6, 63            # ? in ASCII
+    beq s1, t6, add_last
+
+########################neveikia
+
+write:
     # Write to stdout
     li a0, 1                   # Stdout file descriptor
     la a1, bufferf             # load buffer again
