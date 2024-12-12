@@ -34,44 +34,49 @@ read_loop:
     beqz a0, close_file        # End of file (read 0 bytes)
     mv a2,a0                   # Bytes to print
 
-    li t3, 1             # count words
-    li t4, 0             # count sentences
-    li t5, 0             # index through buffer
-    li s1, 0             # previous byte
-    li s2, 0             # flag for the first byte
+    li t3, 1                   # count words
+    li t4, 0                   # count sentences
+    li t5, 0                   # index through buffer
+    li s1, 0                   # previous byte
+    li s2, 0                   # flag for the first byte
+
+    li s3, 'A'                 # Load ASCII value of 'A'
+    li s4, 'Z'                 # Load ASCII value of 'Z'
+    li s5, 'a'                 # Load ASCII value of 'a'
+    li s6, 'z'                 # Load ASCII value of 'z'
 
 count_spaces:
-    mv s1, t5            # Load previous byte 
-    lb t5, 0(t1)         # Load byte from buffer
-    beqz t5, done_count  # If the byte is 0 (end of string), exit loop
+    mv s1, t5                  # Load previous byte 
+    lb t5, 0(t1)               # Load byte from buffer
+    beqz t5, done_count        # If the byte is 0 (end of string), exit loop
 
-    li t6, 32            # space in ASCII
+    li t6, 32                  # space in ASCII
     beq t5, t6, increment_space
     
-    li t6, 46            # . in ASCII
+    li t6, 46                  # . in ASCII
     beq t5, t6, increment_sentence
-    li t6, 33            # ! in ASCII
+    li t6, 33                  # ! in ASCII
     beq t5, t6, increment_sentence
-    li t6, 63            # ? in ASCII
+    li t6, 63                  # ? in ASCII
     beq t5, t6, increment_sentence
 
     skip:
-    addi t1, t1, 1       # Move buffer pointer to next byte
+    addi t1, t1, 1             # Move buffer pointer to next byte
     li s2, 1
     j count_spaces
 
 increment_space:
-    beq s2, zero, skip   # if bit is the first bit - we skip
-    beq s1, t5, skip     # if bit is the same as last bit - we skip
-    addi t3, t3, 1       # Increment space counter
-    addi t1, t1, 1       # Move buffer pointer to next byte
+    beq s2, zero, skip         # if bit is the first bit - we skip
+    beq s1, t5, skip           # if bit is the same as last bit - we skip
+    addi t3, t3, 1             # Increment space counter
+    addi t1, t1, 1             # Move buffer pointer to next byte
     j count_spaces
 
 increment_sentence:
-    beq s2, zero, skip     # if bit is the first bit - we skip
-    beq s1, t5, skip       # if bit is the same as last bit - we skip
-    addi t4, t4, 1         # Increment sentence counter
-    addi t1, t1, 1         # Move buffer pointer to next byte
+    beq s2, zero, skip         # if bit is the first bit - we skip
+    beq s1, t5, skip           # if bit is the same as last bit - we skip
+    addi t4, t4, 1             # Increment sentence counter
+    addi t1, t1, 1             # Move buffer pointer to next byte
     j count_spaces
 
 done_count:
