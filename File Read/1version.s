@@ -61,8 +61,8 @@ count_spaces:
     j count_spaces
 
 increment_space:
-    beq s2, zero, skip
-    beq s1, t5, skip
+    beq s2, zero, skip   # if bit is the first bit - we skip
+    beq s1, t5, skip     # if bit is the same as last bit - we skip
     addi t3, t3, 1       # Increment space counter
     addi t1, t1, 1       # Move buffer pointer to next byte
     j count_spaces
@@ -70,31 +70,11 @@ increment_space:
 increment_sentence:
     beq s2, zero, skip     # if bit is the first bit - we skip
     beq s1, t5, skip       # if bit is the same as last bit - we skip
-    addi t1, t1, 1
-    lb t5, 0(t1)           # load next bit
-    li t6, 32              # space in ASCII
-    bne t5, t6, skip       # if next bit is not space - we do not have a sentence
-    addi t4, t4, 1         # we got a sentence
+    addi t4, t4, 1         # Increment sentence counter
+    addi t1, t1, 1         # Move buffer pointer to next byte
     j count_spaces
 
-########################neveikia
-add_last:
-    addi t4, t4, 1       # Increment sentence counter
-    j write
-
 done_count:
-    # Check if last bit was .!? - increment sentence counter
-    lb s1, 0(t1)           # load last bit
-    li t6, 46            # . in ASCII
-    beq s1, t6, add_last
-    li t6, 33            # ! in ASCII
-    beq s1, t6, add_last
-    li t6, 63            # ? in ASCII
-    beq s1, t6, add_last
-
-########################neveikia
-
-write:
     # Write to stdout
     li a0, 1                   # Stdout file descriptor
     la a1, bufferf             # load buffer again
