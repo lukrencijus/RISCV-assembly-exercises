@@ -40,11 +40,12 @@ read_loop:
     li s1, 0                   # previous byte
     li s2, 0                   # flag for the first byte
 
-    li s3, 'A'                 # Load ASCII value of 'A'
-    li s4, 'Z'                 # Load ASCII value of 'Z'
-    li s5, 'a'                 # Load ASCII value of 'a'
-    li s6, 'z'                 # Load ASCII value of 'z'
-    li s7, 0                   # Uppercase counter
+    li s3, 'A'
+    li s4, 'Z'
+    li s5, 'a'
+    li s6, 'z'
+    li s7, 0                   # Uppercase letter counter
+    li s8, 0                   # Lowercase letter counter
 
 count_spaces:
     mv s1, t5                  # Load previous byte 
@@ -61,11 +62,16 @@ count_spaces:
     li t6, 63                  # ? in ASCII
     beq t5, t6, increment_sentence
 
-    blt t5, s3, skip
-    bgt t5, s4, skip
-    addi s7, s7, 1           # Increment uppercase counter
+    blt t5, s3, go
+    bgt t5, s4, go
+    addi s7, s7, 1           # Increment uppercase letter counter
 
-    skip:
+go:
+    blt t5, s5, skip
+    bgt t5, s6, skip
+    addi s8, s8, 1           # Increment lowercase letter counter
+
+skip:
     addi t1, t1, 1             # Move buffer pointer to next byte
     li s2, 1
     j count_spaces
@@ -122,6 +128,16 @@ close_file:
 
     # print the uppercase letter count
     add a0, zero, s7
+    la a1, bufferf
+    call itoa
+    li a7, 64
+    li a0, 1
+    la a1, bufferf
+    li a2, 3
+    ecall
+
+    # print the lowercase letter count
+    add a0, zero, s8
     la a1, bufferf
     call itoa
     li a7, 64
