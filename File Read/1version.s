@@ -1,11 +1,24 @@
+.equ STDOUT, 1
+.equ SYS_WRITE, 64
+.equ EXIT, 93
+
 .data
 .align 4
+
+bufferf:
+    .space 2048 # buffer space (2kb)
+
+.section .rodata
+.align 2
 
 filename:
 	.asciz "test.txt"
 
-bufferf:
-    .space 2048 # buffer space (2kb)
+msg:
+    .ascii  "\nWord count: "
+    
+l_msg:
+    .byte   .-msg
 
 .text
 .globl _start
@@ -92,9 +105,9 @@ increment_sentence:
 
 done_count:
     # Write to stdout
-    li a0, 1                   # Stdout file descriptor
+    li a0, STDOUT                   # Stdout file descriptor
     la a1, bufferf             # load buffer again
-    li a7, 64                  # Syscall number for write
+    li a7, SYS_WRITE                  # Syscall number for write
     ecall
     bltz a0, write_error       # Exit if write failed
 
@@ -106,12 +119,19 @@ close_file:
     li a7, 57                  # Syscall number for close
     ecall
 
+    # print words "word count"
+    li a0, STDOUT           # File descriptor, 1
+    la a1, msg              # Address of the message
+    lbu a2, l_msg           # Length of string
+    li a7, SYS_WRITE        # System call code for write
+    ecall                   # Make the syscall
+
     # print the word count
     add a0, zero, t3
     la a1, bufferf
     call itoa
-    li a7, 64
-    li a0, 1
+    li a7, SYS_WRITE
+    li a0, STDOUT
     la a1, bufferf
     li a2, 3
     ecall
@@ -120,8 +140,8 @@ close_file:
     add a0, zero, t4
     la a1, bufferf
     call itoa
-    li a7, 64
-    li a0, 1
+    li a7, SYS_WRITE
+    li a0, STDOUT
     la a1, bufferf
     li a2, 3
     ecall
@@ -130,8 +150,8 @@ close_file:
     add a0, zero, s7
     la a1, bufferf
     call itoa
-    li a7, 64
-    li a0, 1
+    li a7, SYS_WRITE
+    li a0, STDOUT
     la a1, bufferf
     li a2, 3
     ecall
@@ -140,22 +160,22 @@ close_file:
     add a0, zero, s8
     la a1, bufferf
     call itoa
-    li a7, 64
-    li a0, 1
+    li a7, SYS_WRITE
+    li a0, STDOUT
     la a1, bufferf
     li a2, 3
     ecall
 
     # Exit successfully
     li a0, 0
-    li a7, 93
+    li a7, EXIT
     ecall
 
 read_error:
 write_error:
 exit_error:
-    li a0, 1
-    li a7, 93
+    li a0, STDOUT
+    li a7, EXIT
     ecall
 
 # integer to ASCII
