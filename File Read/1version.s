@@ -117,7 +117,16 @@ increment_sentence:
     addi t1, t1, 1             # Move buffer pointer to next byte
     j count_spaces
 
+add_last:
+    addi t3, t3, -1       # lower word counter
+    j write
+    
 done_count:
+    # Check if last bit was space - lower word counter
+    li t6, 32            # space in ASCII
+    beq s1, t6, add_last
+
+write:
     # Write to stdout
     li a0, STDOUT              # Stdout file descriptor
     la a1, bufferf             # load buffer again
@@ -178,6 +187,7 @@ close_file:
     li a7, EXIT
     ecall
 
+# Exit unsuccessfully
 read_error:
 write_error:
 exit_error:
