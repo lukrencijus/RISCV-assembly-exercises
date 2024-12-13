@@ -81,6 +81,8 @@ count_spaces:
 
     li t6, 32                  # space in ASCII
     beq t5, t6, increment_space
+    li t6, 10                  # new line in ASCII
+    beq t5, t6, increment_space
     
     li t6, 46                  # . in ASCII
     beq t5, t6, increment_sentence
@@ -122,8 +124,10 @@ add_last:
     j write
     
 done_count:
-    # Check if last bit was space - lower word counter
+    # Check if last bit was space or new line - lower word counter
     li t6, 32            # space in ASCII
+    beq s1, t6, add_last
+    li t6, 10            # new line in ASCII
     beq s1, t6, add_last
 
 write:
