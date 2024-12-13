@@ -146,7 +146,7 @@ close_file:
     li a7, SYS_WRITE
     li a0, STDOUT
     la a1, bufferf
-    li a2, 3
+    li a2, 4
     ecall
 
     # print string "Sentence count: "
@@ -162,7 +162,7 @@ close_file:
     li a7, SYS_WRITE
     li a0, STDOUT
     la a1, bufferf
-    li a2, 3
+    li a2, 4
     ecall
 
     # print string "Uppercase letter count: "
@@ -178,7 +178,7 @@ close_file:
     li a7, SYS_WRITE
     li a0, STDOUT
     la a1, bufferf
-    li a2, 3
+    li a2, 4
     ecall
 
     # print string "Lowercase letter count: "
@@ -194,7 +194,7 @@ close_file:
     li a7, SYS_WRITE
     li a0, STDOUT
     la a1, bufferf
-    li a2, 3
+    li a2, 4
     ecall
 
     # Exit successfully
@@ -211,18 +211,25 @@ exit_error:
 
 # integer to ASCII
 itoa:
-    # Simple conversion for a two-digit number
-    li t0, 10               # Load divisor 10 into t0
-    divu t1, a0, t0         # Divide a0 by 10, result in t1 (quotient)
-    remu t2, a0, t0         # Get remainder of a0 / 10, result in t2 (last digit)
+    # Simple conversion for a three-digit number
+    li s0, 100              # Load divisor 100 into t0
+    divu s1, a0, s0         # Divide a0 by 100, result in t1 (quotient, hundreds)
+    remu s2, a0, s0         # Get remainder of a0 / 100, result in t2 (remainder, tens+ones)
 
-    addi t1, t1, '0'        # Convert first digit to ASCII
-    sb t1, 0(a1)            # Store first digit at buffer
+    li s0, 10               # Load divisor 10 into t0 for next step
+    divu s3, s2, s0         # Divide t2 by 10, result in t3 (quotient, tens digit)
+    remu s4, s2, s0         # Get remainder of t2 / 10, result in t4 (ones digit)
 
-    addi t2, t2, '0'        # Convert second digit to ASCII
-    sb t2, 1(a1)            # Store second digit at buffer + 1
+    addi s1, s1, '0'        # Convert first digit to ASCII
+    sb s1, 0(a1)            # Store first digit at buffer
 
-    li t3, '\n'             # Newline character
-    sb t3, 2(a1)            # Store newline at buffer + 2
+    addi s3, s3, '0'        # Convert second digit to ASCII
+    sb s3, 1(a1)            # Store second digit at buffer + 1
+
+    addi s4, s4, '0'        # Convert third digit to ASCII
+    sb s4, 2(a1)            # Store third digit at buffer + 2
+
+    li s5, '\n'             # Newline character
+    sb s5, 3(a1)            # Store newline at buffer + 3
 
     ret                     # Return from function
