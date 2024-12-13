@@ -54,7 +54,7 @@ read_loop:
     # Read from file
     mv a0, t0                  # File descriptor
     mv a1, t1                  # Buffer address
-    li a2, 1024                # Buffer size (1kb)
+    li a2, 2048                # Buffer size (1kb)
     li a7, 63                  # Syscall number for read
     ecall
     bltz a0, read_error        # Exit if read failed
@@ -125,13 +125,14 @@ add_last:
     
 done_count:
     # Check if last bit was space or new line - lower word counter
-    li t6, 32            # space in ASCII
+    li t6, 32                   # space in ASCII
     beq s1, t6, add_last
-    li t6, 10            # new line in ASCII
+    li t6, 10                   # new line in ASCII
     beq s1, t6, add_last
 
 write:
-    # Write to stdout
+    # Comment next line if you want to print the text from file
+    beq zero, zero, close_file
     li a0, STDOUT              # Stdout file descriptor
     la a1, bufferf             # load buffer again
     li a7, SYS_WRITE           # Syscall number for write
