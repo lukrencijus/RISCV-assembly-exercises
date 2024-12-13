@@ -89,18 +89,18 @@ count_spaces:
     li t6, 63                  # ? in ASCII
     beq t5, t6, increment_sentence
 
-    blt t5, s3, go
+    blt t5, s3, go             # Check uppercase letters
     bgt t5, s4, go
-    addi s7, s7, 1           # Increment uppercase letter counter
+    addi s7, s7, 1             # Increment uppercase letter counter
 
 go:
-    blt t5, s5, skip
+    blt t5, s5, skip           # Check lowercase letters 
     bgt t5, s6, skip
-    addi s8, s8, 1           # Increment lowercase letter counter
+    addi s8, s8, 1             # Increment lowercase letter counter
 
 skip:
     addi t1, t1, 1             # Move buffer pointer to next byte
-    li s2, 1
+    li s2, 1                   # Flag we are no longer in first bit    
     j count_spaces
 
 increment_space:
@@ -119,9 +119,9 @@ increment_sentence:
 
 done_count:
     # Write to stdout
-    li a0, STDOUT                   # Stdout file descriptor
+    li a0, STDOUT              # Stdout file descriptor
     la a1, bufferf             # load buffer again
-    li a7, SYS_WRITE                  # Syscall number for write
+    li a7, SYS_WRITE           # Syscall number for write
     ecall
     bltz a0, write_error       # Exit if write failed
 
@@ -134,41 +134,41 @@ close_file:
     ecall
 
     # print string "Word count: "
-    li a0, STDOUT               # File descriptor, 1
-    la a1, word_count           # Address of the message
-    lbu a2, l_word_count        # Length of string
-    li a7, SYS_WRITE            # System call code for write
-    ecall                       # Make the syscall
+    li a0, STDOUT              # File descriptor, 1
+    la a1, word_count          # Address of the message
+    lbu a2, l_word_count       # Length of string
+    li a7, SYS_WRITE           # System call code for write
+    ecall                      # Make the syscall
     # print the word count
     add a0, zero, t3
     jal ra, print
 
     # print string "Sentence count: "
-    li a0, STDOUT               # File descriptor, 1
-    la a1, sentence_count       # Address of the message
-    lbu a2, l_sentence_count    # Length of string
-    li a7, SYS_WRITE            # System call code for write
-    ecall                       # Make the syscall
+    li a0, STDOUT              # File descriptor, 1
+    la a1, sentence_count      # Address of the message
+    lbu a2, l_sentence_count   # Length of string
+    li a7, SYS_WRITE           # System call code for write
+    ecall                      # Make the syscall
     # print the sentence count
     add a0, zero, t4
     jal ra, print
 
     # print string "Uppercase letter count: "
-    li a0, STDOUT               # File descriptor, 1
-    la a1, uppercase_count      # Address of the message
-    lbu a2, l_uppercase_count   # Length of string
-    li a7, SYS_WRITE            # System call code for write
-    ecall                       # Make the syscall
+    li a0, STDOUT              # File descriptor, 1
+    la a1, uppercase_count     # Address of the message
+    lbu a2, l_uppercase_count  # Length of string
+    li a7, SYS_WRITE           # System call code for write
+    ecall                      # Make the syscall
     # print the uppercase letter count
     add a0, zero, s7
     jal ra, print
 
     # print string "Lowercase letter count: "
-    li a0, STDOUT               # File descriptor, 1
-    la a1, lowercase_count      # Address of the message
-    lbu a2, l_lowercase_count   # Length of string
-    li a7, SYS_WRITE            # System call code for write
-    ecall                       # Make the syscall
+    li a0, STDOUT              # File descriptor, 1
+    la a1, lowercase_count     # Address of the message
+    lbu a2, l_lowercase_count  # Length of string
+    li a7, SYS_WRITE           # System call code for write
+    ecall                      # Make the syscall
     # print the lowercase letter count
     add a0, zero, s8
     jal ra, print
@@ -181,7 +181,7 @@ close_file:
 read_error:
 write_error:
 exit_error:
-    li a0, STDOUT
+    li a0, 1
     li a7, EXIT
     ecall
 
@@ -201,24 +201,24 @@ print:
 # integer to ASCII
 itoa:
     # Simple conversion for a three-digit number
-    li s0, 100              # Load divisor 100 into t0
-    divu s1, a0, s0         # Divide a0 by 100, result in t1 (quotient, hundreds)
-    remu s2, a0, s0         # Get remainder of a0 / 100, result in t2 (remainder, tens+ones)
+    li s0, 100                 # Load divisor 100 into t0
+    divu s1, a0, s0            # Divide a0 by 100, result in t1 (quotient, hundreds)
+    remu s2, a0, s0            # Get remainder of a0 / 100, result in t2 (remainder, tens+ones)
 
-    li s0, 10               # Load divisor 10 into t0 for next step
-    divu s3, s2, s0         # Divide t2 by 10, result in t3 (quotient, tens digit)
-    remu s4, s2, s0         # Get remainder of t2 / 10, result in t4 (ones digit)
+    li s0, 10                  # Load divisor 10 into t0 for next step
+    divu s3, s2, s0            # Divide t2 by 10, result in t3 (quotient, tens digit)
+    remu s4, s2, s0            # Get remainder of t2 / 10, result in t4 (ones digit)
 
-    addi s1, s1, '0'        # Convert first digit to ASCII
-    sb s1, 0(a1)            # Store first digit at buffer
+    addi s1, s1, '0'           # Convert first digit to ASCII
+    sb s1, 0(a1)               # Store first digit at buffer
 
-    addi s3, s3, '0'        # Convert second digit to ASCII
-    sb s3, 1(a1)            # Store second digit at buffer + 1
+    addi s3, s3, '0'           # Convert second digit to ASCII
+    sb s3, 1(a1)               # Store second digit at buffer + 1
 
-    addi s4, s4, '0'        # Convert third digit to ASCII
-    sb s4, 2(a1)            # Store third digit at buffer + 2
+    addi s4, s4, '0'           # Convert third digit to ASCII
+    sb s4, 2(a1)               # Store third digit at buffer + 2
 
-    li s5, '\n'             # Newline character
-    sb s5, 3(a1)            # Store newline at buffer + 3
+    li s5, '\n'                # Newline character
+    sb s5, 3(a1)               # Store newline at buffer + 3
 
-    ret                     # Return from function
+    ret                        # Return from function
