@@ -14,11 +14,25 @@ bufferf:
 filename:
 	.asciz "test.txt"
 
-msg:
+word_count:
     .ascii  "\nWord count: "
-    
-l_msg:
-    .byte   .-msg
+l_word_count:
+    .byte   .-word_count
+
+sentence_count:
+    .ascii  "Sentence count: "
+l_sentence_count:
+    .byte   .-sentence_count
+
+uppercase_count:
+    .ascii  "Uppercase letter count: "
+l_uppercase_count:
+    .byte   .-uppercase_count
+
+lowercase_count:
+    .ascii  "Lowercase letter count: "
+l_lowercase_count:
+    .byte   .-lowercase_count
 
 .text
 .globl _start
@@ -119,13 +133,12 @@ close_file:
     li a7, 57                  # Syscall number for close
     ecall
 
-    # print words "word count"
-    li a0, STDOUT           # File descriptor, 1
-    la a1, msg              # Address of the message
-    lbu a2, l_msg           # Length of string
-    li a7, SYS_WRITE        # System call code for write
-    ecall                   # Make the syscall
-
+    # print string "Word count: "
+    li a0, STDOUT               # File descriptor, 1
+    la a1, word_count           # Address of the message
+    lbu a2, l_word_count        # Length of string
+    li a7, SYS_WRITE            # System call code for write
+    ecall                       # Make the syscall
     # print the word count
     add a0, zero, t3
     la a1, bufferf
@@ -136,6 +149,12 @@ close_file:
     li a2, 3
     ecall
 
+    # print string "Sentence count: "
+    li a0, STDOUT               # File descriptor, 1
+    la a1, sentence_count       # Address of the message
+    lbu a2, l_sentence_count    # Length of string
+    li a7, SYS_WRITE            # System call code for write
+    ecall                       # Make the syscall
     # print the sentence count
     add a0, zero, t4
     la a1, bufferf
@@ -146,6 +165,12 @@ close_file:
     li a2, 3
     ecall
 
+    # print string "Uppercase letter count: "
+    li a0, STDOUT               # File descriptor, 1
+    la a1, uppercase_count      # Address of the message
+    lbu a2, l_uppercase_count   # Length of string
+    li a7, SYS_WRITE            # System call code for write
+    ecall                       # Make the syscall
     # print the uppercase letter count
     add a0, zero, s7
     la a1, bufferf
@@ -156,6 +181,12 @@ close_file:
     li a2, 3
     ecall
 
+    # print string "Lowercase letter count: "
+    li a0, STDOUT               # File descriptor, 1
+    la a1, lowercase_count      # Address of the message
+    lbu a2, l_lowercase_count   # Length of string
+    li a7, SYS_WRITE            # System call code for write
+    ecall                       # Make the syscall
     # print the lowercase letter count
     add a0, zero, s8
     la a1, bufferf
