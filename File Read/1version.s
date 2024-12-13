@@ -141,13 +141,7 @@ close_file:
     ecall                       # Make the syscall
     # print the word count
     add a0, zero, t3
-    la a1, bufferf
-    call itoa
-    li a7, SYS_WRITE
-    li a0, STDOUT
-    la a1, bufferf
-    li a2, 4
-    ecall
+    jal ra, print
 
     # print string "Sentence count: "
     li a0, STDOUT               # File descriptor, 1
@@ -157,13 +151,7 @@ close_file:
     ecall                       # Make the syscall
     # print the sentence count
     add a0, zero, t4
-    la a1, bufferf
-    call itoa
-    li a7, SYS_WRITE
-    li a0, STDOUT
-    la a1, bufferf
-    li a2, 4
-    ecall
+    jal ra, print
 
     # print string "Uppercase letter count: "
     li a0, STDOUT               # File descriptor, 1
@@ -173,13 +161,7 @@ close_file:
     ecall                       # Make the syscall
     # print the uppercase letter count
     add a0, zero, s7
-    la a1, bufferf
-    call itoa
-    li a7, SYS_WRITE
-    li a0, STDOUT
-    la a1, bufferf
-    li a2, 4
-    ecall
+    jal ra, print
 
     # print string "Lowercase letter count: "
     li a0, STDOUT               # File descriptor, 1
@@ -189,13 +171,7 @@ close_file:
     ecall                       # Make the syscall
     # print the lowercase letter count
     add a0, zero, s8
-    la a1, bufferf
-    call itoa
-    li a7, SYS_WRITE
-    li a0, STDOUT
-    la a1, bufferf
-    li a2, 4
-    ecall
+    jal ra, print
 
     # Exit successfully
     li a0, 0
@@ -208,6 +184,19 @@ exit_error:
     li a0, STDOUT
     li a7, EXIT
     ecall
+
+# Print ASCII integers
+print:
+    add s6, zero, ra
+    la a1, bufferf
+    call itoa
+    li a7, SYS_WRITE
+    li a0, STDOUT
+    la a1, bufferf
+    li a2, 4
+    ecall
+    add ra, zero, s6
+    ret
 
 # integer to ASCII
 itoa:
