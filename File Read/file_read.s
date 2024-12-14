@@ -42,24 +42,21 @@ _start:
 	la t1, bufferf
 	
     # Open file
-    li a0, -100                # AT_FDCWD
+    li a0, -100                # Current working directory
     la a1, filename            # File name
-    li a2, 0                   # O_RDONLY
+    li a2, 0                   # Read-only mode
     li a7, 56                  # Syscall number for openat
     ecall
     bltz a0, exit_error        # Exit if open failed
-    mv t0, a0                  # Save file descriptor in t0
 
 read_loop:
     # Read from file
-    mv a0, t0                  # File descriptor
-    mv a1, t1                  # Buffer address
-    li a2, 2048                # Buffer size (1kb)
+    la a1, bufferf
+    li a2, 2048                # Buffer size (2kb)
     li a7, 63                  # Syscall number for read
     ecall
     bltz a0, read_error        # Exit if read failed
     beqz a0, close_file        # End of file (read 0 bytes)
-    mv a2,a0                   # Bytes to print
 
     li t3, 1                   # count words
     li t4, 0                   # count sentences
@@ -74,7 +71,7 @@ read_loop:
     li s7, 0                   # Uppercase letter counter
     li s8, 0                   # Lowercase letter counter
 
-count_spaces:
+count_everything:
     mv s1, t5                  # Load previous byte 
     lb t5, 0(t1)               # Load byte from buffer
     beqz t5, done_count        # If the byte is 0 (end of string), exit loop
@@ -103,21 +100,21 @@ go:
 skip:
     addi t1, t1, 1             # Move buffer pointer to next byte
     li s2, 1                   # Flag we are no longer in first bit    
-    j count_spaces
+    j count_everything
 
 increment_space:
     beq s2, zero, skip         # if bit is the first bit - we skip
     beq s1, t5, skip           # if bit is the same as last bit - we skip
     addi t3, t3, 1             # Increment space counter
     addi t1, t1, 1             # Move buffer pointer to next byte
-    j count_spaces
+    j count_everything
 
 increment_sentence:
     beq s2, zero, skip         # if bit is the first bit - we skip
     beq s1, t5, skip           # if bit is the same as last bit - we skip
     addi t4, t4, 1             # Increment sentence counter
     addi t1, t1, 1             # Move buffer pointer to next byte
-    j count_spaces
+    j count_everything
 
 add_last:
     addi t3, t3, -1       # lower word counter
