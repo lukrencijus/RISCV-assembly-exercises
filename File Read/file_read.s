@@ -8,12 +8,6 @@
 bufferf:
     .space 2048 # buffer space (2kb)
 
-counts:
-    .space 104           # 26 integers (4 bytes each) initialized to 0
-
-newline:
-    .asciz "\n"         # For printing newline
-
 .section .rodata
 .align 2
 
@@ -98,33 +92,10 @@ count_everything:
     bgt t5, s4, go
     addi s7, s7, 1             # Increment uppercase letter counter
 
-each_latin:
-    blt t5, s4, skip        # If t5 < 'A', not a letter
-    bgt t5, t4, check_lower # If t5 > 'Z', check lowercase
-
-    addi t5, t5, 32         # 'A'-'Z' -> 'a'-'z'
-
-check_lower:
-    blt t5, s5, skip  # If t5 < 'a', not a letter
-    bgt t5, s6, skip  # If t5 > 'z', not a letter
-
-    # Map to index
-    sub t5, t5, s5          # t1 = t1 - 'a'
-
-    # Increment the corresponding count
-    slli t5, t5, 2          # t1 = t1 * 4 (word offset)
-    la s5, counts           # Base address of counts array
-    add s5, s5, t5         # Address of counts[t1]
-    lw s6, 0(s5)            # Load counts[t1]
-    addi s6, s6, 1          # Increment count
-    sw s6, 0(s5)            # Store updated count back
-    j count_everything
-
 go:
     blt t5, s5, skip           # Check lowercase letters 
     bgt t5, s6, skip
     addi s8, s8, 1             # Increment lowercase letter counter
-    j each_latin
 
 skip:
     addi t1, t1, 1             # Move buffer pointer to next byte
@@ -213,36 +184,6 @@ close_file:
     add a0, zero, s8
     jal ra, print
 
-print_loop:
-    li t1, 26              # Total letters
-    beq t0, t1, exit       # If index == 26, exit loop
-
-    # Print letter
-    addi t2, t0, 97        # ASCII 'a' + index
-    mv a0, t2
-    li a7, 11              # syscall: putchar
-    ecall
-
-    # Print count
-    la t3, counts          # Load counts array base
-    slli t0, t0, 2         # Multiply index by 4
-    add t3, t3, t0         # Address of counts[t0]
-    lw t4, 0(t3)           # Load count
-    mv a0, t4
-    li a7, 1               # syscall: print integer
-    ecall
-
-    # Print newline
-    la a0, newline
-    li a7, 4               # syscall: print string
-    ecall
-
-    # Increment index
-    srli t0, t0, 2         # Reset index division effect
-    addi t0, t0, 1         # Increment
-    j print_loop
-
-exit:
     # Exit successfully
     li a0, 0
     li a7, EXIT
@@ -293,3 +234,4 @@ itoa:
     sb s5, 3(a1)               # Store newline at buffer + 3
 
     ret                        # Return from function
+    
