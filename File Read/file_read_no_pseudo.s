@@ -6,7 +6,7 @@
 .align 4
 
 bufferf:
-    .space 2048 # buffer space (2kb)
+    .space 2048                # Buffer space (2kb)
 
 .section .rodata
 .align 2
@@ -41,198 +41,203 @@ _start:
     # The file data will be read into bufferf
 	la t1, bufferf
 	
-    # Open file
-    li a0, -100                # AT_FDCWD
-    la a1, filename            # File name
-    li a2, 0                   # O_RDONLY
-    li a7, 56                  # Syscall number for openat
+    # Open file           
+    addi a0, x0, -100          # Current working directory
+    la a1, filename            # File name               
+    addi a2, x0, 0             # Read-only mode              
+    addi a7, x0, 56            # Syscall number for openat
     ecall
     bltz a0, exit_error        # Exit if open failed
-    mv t0, a0                  # Save file descriptor in t0
 
 read_loop:
     # Read from file
-    mv a0, t0                  # File descriptor
-    mv a1, t1                  # Buffer address
-    li a2, 1024                # Buffer size (1kb)
-    li a7, 63                  # Syscall number for read
+    la a1, bufferf             
+    li a2, 2048                # Buffer size (2kb)                        
+    addi a7, x0, 63            # Syscall number for read
     ecall
     bltz a0, read_error        # Exit if read failed
     beqz a0, close_file        # End of file (read 0 bytes)
-    mv a2,a0                   # Bytes to print
+              
+    addi t3, x0, 1             # Count words            
+    addi t4, x0, 0             # Count sentences                 
+    addi t5, x0, 0             # Index through buffer                
+    addi s1, x0, 0             # Previous byte               
+    addi s2, x0, 0             # Flag for the first byte
 
-    li t3, 1                   # count words
-    li t4, 0                   # count sentences
-    li t5, 0                   # index through buffer
-    li s1, 0                   # previous byte
-    li s2, 0                   # flag for the first byte
+    addi s3, x0, 65            # 'A' in ASCII
+    addi s4, x0, 90            # 'Z' in ASCII
+    addi s5, x0, 97            # 'a' in ASCII
+    addi s6, x0, 122           # 'z' in ASCII              
+    addi s8, x0, 0             # Uppercase letter counter                 
+    addi s9, x0, 0             # Lowercase letter counter
 
-    li s3, 'A'
-    li s4, 'Z'
-    li s5, 'a'
-    li s6, 'z'
-    li s7, 0                   # Uppercase letter counter
-    li s8, 0                   # Lowercase letter counter
-
-count_spaces:
-    mv s1, t5                  # Load previous byte 
+count_everything:
+    addi s1, t5, 0             # Load previous byte
     lb t5, 0(t1)               # Load byte from buffer
     beqz t5, done_count        # If the byte is 0 (end of string), exit loop
-
-    li t6, 32                  # space in ASCII
+              
+    addi t6, x0, 32            # Space in ASCII
+    beq t5, t6, increment_space               
+    addi t6, x0, 10            # New line in ASCII
     beq t5, t6, increment_space
-    li t6, 10                  # new line in ASCII
-    beq t5, t6, increment_space
-    
-    li t6, 46                  # . in ASCII
-    beq t5, t6, increment_sentence
-    li t6, 33                  # ! in ASCII
-    beq t5, t6, increment_sentence
-    li t6, 63                  # ? in ASCII
+                
+    addi t6, x0, 46            # . in ASCII
+    beq t5, t6, increment_sentence              
+    addi t6, x0, 33            # ! in ASCII
+    beq t5, t6, increment_sentence                
+    addi t6, x0, 63            # ? in ASCII
     beq t5, t6, increment_sentence
 
     blt t5, s3, go             # Check uppercase letters
     bgt t5, s4, go
-    addi s7, s7, 1             # Increment uppercase letter counter
+    addi s8, s8, 1             # Increment uppercase letter counter
 
 go:
     blt t5, s5, skip           # Check lowercase letters 
     bgt t5, s6, skip
-    addi s8, s8, 1             # Increment lowercase letter counter
+    addi s9, s9, 1             # Increment lowercase letter counter
 
 skip:
-    addi t1, t1, 1             # Move buffer pointer to next byte
-    li s2, 1                   # Flag we are no longer in first bit    
-    j count_spaces
+    addi t1, t1, 1             # Move buffer pointer to next byte              
+    addi s2, x0, 1             # Flag we are no longer in first bit
+    j count_everything
 
 increment_space:
-    beq s2, zero, skip         # if bit is the first bit - we skip
-    beq s1, t5, skip           # if bit is the same as last bit - we skip
+    beq s2, zero, skip         # If bit is the first bit - we skip
+    beq s1, t5, skip           # If bit is the same as last bit - we skip
     addi t3, t3, 1             # Increment space counter
     addi t1, t1, 1             # Move buffer pointer to next byte
-    j count_spaces
+    j count_everything
 
 increment_sentence:
-    beq s2, zero, skip         # if bit is the first bit - we skip
-    beq s1, t5, skip           # if bit is the same as last bit - we skip
+    beq s2, zero, skip         # If bit is the first bit - we skip
+    beq s1, t5, skip           # If bit is the same as last bit - we skip
     addi t4, t4, 1             # Increment sentence counter
     addi t1, t1, 1             # Move buffer pointer to next byte
-    j count_spaces
+    j count_everything
 
 add_last:
-    addi t3, t3, -1       # lower word counter
+    addi t3, t3, -1            # Lower the word counter
     j write
     
 done_count:
-    # Check if last bit was space or new line - lower word counter
-    li t6, 32            # space in ASCII
-    beq s1, t6, add_last
-    li t6, 10            # new line in ASCII
+    # Check if last bit was space or new line - lower word counter              
+    addi t6, x0, 32            # Space in ASCII
+    beq s1, t6, add_last               
+    addi t6, x0, 10            # New line in ASCII
     beq s1, t6, add_last
 
 write:
-    # Write to stdout
-    li a0, STDOUT              # Stdout file descriptor
-    la a1, bufferf             # load buffer again
-    li a7, SYS_WRITE           # Syscall number for write
+    # Comment next line if you want to print the text from file
+    beq zero, zero, close_file        
+    addi a0, x0, STDOUT        # Stdout file descriptor
+    la a1, bufferf             # Load buffer again       
+    addi a7, x0, SYS_WRITE     # Syscall number for write
     ecall
     bltz a0, write_error       # Exit if write failed
 
     j read_loop                # Continue reading
 
 close_file:
-    # Close the file
-    mv a0, t0                  # File descriptor
-    li a7, 57                  # Syscall number for close
+    # Close the file             
+    addi a0, t0, 0             # File descriptor              
+    addi a7, x0, 57            # Syscall number for close
     ecall
 
-    # print string "Word count: "
-    li a0, STDOUT              # File descriptor, 1
+    # print string "Word count: "            
+    addi a0, x0, STDOUT        # File descriptor, 1
     la a1, word_count          # Address of the message
-    lbu a2, l_word_count       # Length of string
-    li a7, SYS_WRITE           # System call code for write
+    lbu a2, l_word_count       # Length of string         
+    addi a7, x0, SYS_WRITE     # System call code for write
     ecall                      # Make the syscall
     # print the word count
     add a0, zero, t3
     jal ra, print
 
     # print string "Sentence count: "
-    li a0, STDOUT              # File descriptor, 1
+    addi a0, x0, STDOUT        # File descriptor, 1
     la a1, sentence_count      # Address of the message
     lbu a2, l_sentence_count   # Length of string
-    li a7, SYS_WRITE           # System call code for write
+    addi a7, x0, SYS_WRITE     # System call code for write
     ecall                      # Make the syscall
     # print the sentence count
     add a0, zero, t4
     jal ra, print
 
     # print string "Uppercase letter count: "
-    li a0, STDOUT              # File descriptor, 1
+    addi a0, x0, STDOUT        # File descriptor, 1
     la a1, uppercase_count     # Address of the message
     lbu a2, l_uppercase_count  # Length of string
-    li a7, SYS_WRITE           # System call code for write
+    addi a7, x0, SYS_WRITE     # System call code for write
     ecall                      # Make the syscall
     # print the uppercase letter count
-    add a0, zero, s7
-    jal ra, print
-
-    # print string "Lowercase letter count: "
-    li a0, STDOUT              # File descriptor, 1
-    la a1, lowercase_count     # Address of the message
-    lbu a2, l_lowercase_count  # Length of string
-    li a7, SYS_WRITE           # System call code for write
-    ecall                      # Make the syscall
-    # print the lowercase letter count
     add a0, zero, s8
     jal ra, print
 
+    # print string "Lowercase letter count: "
+    addi a0, x0, STDOUT        # File descriptor, 1
+    la a1, lowercase_count     # Address of the message
+    lbu a2, l_lowercase_count  # Length of string
+    addi a7, x0, SYS_WRITE     # System call code for write
+    ecall                      # Make the syscall
+    # print the lowercase letter count
+    add a0, zero, s9
+    jal ra, print
+
     # Exit successfully
-    li a0, 0
-    li a7, EXIT
+    addi a0, x0, 0
+    addi a7, x0, EXIT
     ecall
 
 # Exit unsuccessfully
 read_error:
 write_error:
 exit_error:
-    li a0, 1
-    li a7, EXIT
+    addi a0, x0, 1
+    addi a7, x0, EXIT
     ecall
 
 # Print ASCII integers
 print:
-    add s6, zero, ra
+    add s11, zero, ra
     la a1, bufferf
     call itoa
-    li a7, SYS_WRITE
-    li a0, STDOUT
+    addi a7, x0, SYS_WRITE
+    addi a0, x0, STDOUT
     la a1, bufferf
-    li a2, 4
+    addi a2, x0, 5             # 5 = 0000 + \n
     ecall
-    add ra, zero, s6
-    ret
+    add ra, zero, s11
+    jalr x0, ra, 0
 
 # integer to ASCII
 itoa:
-    # Simple conversion for a three-digit number
-    li s0, 100                 # Load divisor 100 into t0
-    divu s1, a0, s0            # Divide a0 by 100, result in t1 (quotient, hundreds)
-    remu s2, a0, s0            # Get remainder of a0 / 100, result in t2 (remainder, tens+ones)
+    # Conversion for a four-digit number          
+    addi s0, x0, 1000          # Load divisor 1000 into s0
+    divu s1, a0, s0            # Divide a0 by 1000, result in s1 (thousands place)
+    remu s2, a0, s0            # Get remainder of a0 / 1000, result in s2
+          
+    addi s0, x0, 100           # Load divisor 100 into s0
+    divu s3, s2, s0            # Divide s2 by 100, result in s3 (hundreds place)
+    remu s4, s2, s0            # Get remainder of s2 / 100, result in s4
+               
+    addi s0, x0, 10            # Load divisor 10 into s0
+    divu s5, s4, s0            # Divide s4 by 10, result in s5 (tens place)
+    remu s6, s4, s0            # Get remainder of s4 / 10, result in s6 (ones place)
 
-    li s0, 10                  # Load divisor 10 into t0 for next step
-    divu s3, s2, s0            # Divide t2 by 10, result in t3 (quotient, tens digit)
-    remu s4, s2, s0            # Get remainder of t2 / 10, result in t4 (ones digit)
+    addi s1, s1, '0'           # Convert thousands digit to ASCII
+    sb s1, 0(a1)               # Store thousands digit at buffer
 
-    addi s1, s1, '0'           # Convert first digit to ASCII
-    sb s1, 0(a1)               # Store first digit at buffer
+    addi s3, s3, '0'           # Convert hundreds digit to ASCII
+    sb s3, 1(a1)               # Store hundreds digit at buffer + 1
 
-    addi s3, s3, '0'           # Convert second digit to ASCII
-    sb s3, 1(a1)               # Store second digit at buffer + 1
+    addi s5, s5, '0'           # Convert tens digit to ASCII
+    sb s5, 2(a1)               # Store tens digit at buffer + 2
 
-    addi s4, s4, '0'           # Convert third digit to ASCII
-    sb s4, 2(a1)               # Store third digit at buffer + 2
+    addi s6, s6, '0'           # Convert ones digit to ASCII
+    sb s6, 3(a1)               # Store ones digit at buffer + 3
 
-    li s5, '\n'                # Newline character
-    sb s5, 3(a1)               # Store newline at buffer + 3
+    addi s7, x0, 10            # New line in ASCII
+    sb s7, 4(a1)               # Store newline at buffer + 4
 
-    ret                        # Return from function
+    jalr x0, ra, 0             # Return from function
