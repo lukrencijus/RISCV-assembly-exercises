@@ -39,11 +39,13 @@ l_lowercase_count:
 
 _start:
     # The file data will be read into bufferf
-	la t1, bufferf
+    lui t1, %hi(bufferf)
+    addi t1, t1, %lo(bufferf)
 	
     # Open file           
-    addi a0, x0, -100          # Current working directory
-    la a1, filename            # File name               
+    addi a0, x0, -100          # Current working directory         
+    lui a1, %hi(filename)      # File name
+    addi a1, a1, %lo(filename)               
     addi a2, x0, 0             # Read-only mode              
     addi a7, x0, 56            # Syscall number for openat
     ecall
@@ -51,7 +53,8 @@ _start:
 
 read_loop:
     # Read from file
-    la a1, bufferf             
+    lui a1, %hi(bufferf)
+    addi a1, a1, %lo(bufferf)             
     # Buffer size (2kb)
     lui a2, 1                  # Load upper immediate with 1, which represents 1 << 12 = 4096
     addi a2, a2, -2048         # Subtract 2048 to adjust the value down to 2048                       
@@ -132,8 +135,9 @@ done_count:
 write:
     # Comment next line if you want to print the text from file
     beq zero, zero, close_file        
-    addi a0, x0, STDOUT        # Stdout file descriptor
-    la a1, bufferf             # Load buffer again       
+    addi a0, x0, STDOUT        # Stdout file descriptor         
+    lui a1, %hi(bufferf)       # Load buffer again
+    addi a1, a1, %lo(bufferf)       
     addi a7, x0, SYS_WRITE     # Syscall number for write
     ecall
     bltz a0, write_error       # Exit if write failed
@@ -147,8 +151,9 @@ close_file:
     ecall
 
     # print string "Word count: "            
-    addi a0, x0, STDOUT        # File descriptor, 1
-    la a1, word_count          # Address of the message
+    addi a0, x0, STDOUT        # File descriptor, 1       
+    lui a1, %hi(word_count)    # Address of the message
+    addi a1, a1, %lo(word_count)
     lbu a2, l_word_count       # Length of string         
     addi a7, x0, SYS_WRITE     # System call code for write
     ecall                      # Make the syscall
@@ -157,8 +162,9 @@ close_file:
     jal ra, print
 
     # print string "Sentence count: "
-    addi a0, x0, STDOUT        # File descriptor, 1
-    la a1, sentence_count      # Address of the message
+    addi a0, x0, STDOUT        # File descriptor, 1   
+    lui a1, %hi(sentence_count)# Address of the message
+    addi a1, a1, %lo(sentence_count)
     lbu a2, l_sentence_count   # Length of string
     addi a7, x0, SYS_WRITE     # System call code for write
     ecall                      # Make the syscall
@@ -167,8 +173,9 @@ close_file:
     jal ra, print
 
     # print string "Uppercase letter count: "
-    addi a0, x0, STDOUT        # File descriptor, 1
-    la a1, uppercase_count     # Address of the message
+    addi a0, x0, STDOUT        # File descriptor, 1  
+    lui a1, %hi(uppercase_count)# Address of the message
+    addi a1, a1, %lo(uppercase_count)
     lbu a2, l_uppercase_count  # Length of string
     addi a7, x0, SYS_WRITE     # System call code for write
     ecall                      # Make the syscall
@@ -177,8 +184,9 @@ close_file:
     jal ra, print
 
     # print string "Lowercase letter count: "
-    addi a0, x0, STDOUT        # File descriptor, 1
-    la a1, lowercase_count     # Address of the message
+    addi a0, x0, STDOUT        # File descriptor, 1  
+    lui a1, %hi(lowercase_count)# Address of the message
+    addi a1, a1, %lo(lowercase_count)
     lbu a2, l_lowercase_count  # Length of string
     addi a7, x0, SYS_WRITE     # System call code for write
     ecall                      # Make the syscall
@@ -202,11 +210,13 @@ exit_error:
 # Print ASCII integers
 print:
     add s11, zero, ra
-    la a1, bufferf
+    lui a1, %hi(bufferf)
+    addi a1, a1, %lo(bufferf)
     call itoa
     addi a7, x0, SYS_WRITE
     addi a0, x0, STDOUT
-    la a1, bufferf
+    lui a1, %hi(bufferf)
+    addi a1, a1, %lo(bufferf)
     addi a2, x0, 5             # 5 = 0000 + \n
     ecall
     add ra, zero, s11
