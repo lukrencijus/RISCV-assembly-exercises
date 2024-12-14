@@ -6,7 +6,7 @@
 .align 4
 
 bufferf:
-    .space 2048 # buffer space (2kb)
+    .space 2048                # Buffer space (2kb)
 
 .section .rodata
 .align 2
@@ -58,11 +58,11 @@ read_loop:
     bltz a0, read_error        # Exit if read failed
     beqz a0, close_file        # End of file (read 0 bytes)
 
-    li t3, 1                   # count words
-    li t4, 0                   # count sentences
-    li t5, 0                   # index through buffer
-    li s1, 0                   # previous byte
-    li s2, 0                   # flag for the first byte
+    li t3, 1                   # Count words
+    li t4, 0                   # Count sentences
+    li t5, 0                   # Index through buffer
+    li s1, 0                   # Previous byte
+    li s2, 0                   # Flag for the first byte
 
     li s3, 'A'
     li s4, 'Z'
@@ -76,9 +76,9 @@ count_everything:
     lb t5, 0(t1)               # Load byte from buffer
     beqz t5, done_count        # If the byte is 0 (end of string), exit loop
 
-    li t6, 32                  # space in ASCII
+    li t6, 32                  # Space in ASCII
     beq t5, t6, increment_space
-    li t6, 10                  # new line in ASCII
+    li t6, 10                  # New line in ASCII
     beq t5, t6, increment_space
     
     li t6, 46                  # . in ASCII
@@ -103,35 +103,35 @@ skip:
     j count_everything
 
 increment_space:
-    beq s2, zero, skip         # if bit is the first bit - we skip
-    beq s1, t5, skip           # if bit is the same as last bit - we skip
+    beq s2, zero, skip         # If bit is the first bit - we skip
+    beq s1, t5, skip           # If bit is the same as last bit - we skip
     addi t3, t3, 1             # Increment space counter
     addi t1, t1, 1             # Move buffer pointer to next byte
     j count_everything
 
 increment_sentence:
-    beq s2, zero, skip         # if bit is the first bit - we skip
-    beq s1, t5, skip           # if bit is the same as last bit - we skip
+    beq s2, zero, skip         # If bit is the first bit - we skip
+    beq s1, t5, skip           # If bit is the same as last bit - we skip
     addi t4, t4, 1             # Increment sentence counter
     addi t1, t1, 1             # Move buffer pointer to next byte
     j count_everything
 
 add_last:
-    addi t3, t3, -1       # lower word counter
+    addi t3, t3, -1            # Lower the word counter
     j write
     
 done_count:
     # Check if last bit was space or new line - lower word counter
-    li t6, 32                   # space in ASCII
+    li t6, 32                   # Space in ASCII
     beq s1, t6, add_last
-    li t6, 10                   # new line in ASCII
+    li t6, 10                   # New line in ASCII
     beq s1, t6, add_last
 
 write:
     # Comment next line if you want to print the text from file
     beq zero, zero, close_file
     li a0, STDOUT              # Stdout file descriptor
-    la a1, bufferf             # load buffer again
+    la a1, bufferf             # Load buffer again
     li a7, SYS_WRITE           # Syscall number for write
     ecall
     bltz a0, write_error       # Exit if write failed
@@ -213,13 +213,13 @@ print:
 # integer to ASCII
 itoa:
     # Simple conversion for a three-digit number
-    li s0, 100                 # Load divisor 100 into t0
-    divu s1, a0, s0            # Divide a0 by 100, result in t1 (quotient, hundreds)
-    remu s2, a0, s0            # Get remainder of a0 / 100, result in t2 (remainder, tens+ones)
+    li s0, 100                 # Load divisor 100 into s0
+    divu s1, a0, s0            # Divide a0 by 100, result in s1
+    remu s2, a0, s0            # Get remainder of a0 / 100, result in s2
 
-    li s0, 10                  # Load divisor 10 into t0 for next step
-    divu s3, s2, s0            # Divide t2 by 10, result in t3 (quotient, tens digit)
-    remu s4, s2, s0            # Get remainder of t2 / 10, result in t4 (ones digit)
+    li s0, 10                  # Load divisor 10 into s0 for next step
+    divu s3, s2, s0            # Divide s2 by 10, result in s3
+    remu s4, s2, s0            # Get remainder of s2 / 10, result in s4
 
     addi s1, s1, '0'           # Convert first digit to ASCII
     sb s1, 0(a1)               # Store first digit at buffer
@@ -234,4 +234,3 @@ itoa:
     sb s5, 3(a1)               # Store newline at buffer + 3
 
     ret                        # Return from function
-    
