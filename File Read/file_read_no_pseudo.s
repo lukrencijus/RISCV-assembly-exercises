@@ -48,8 +48,8 @@ _start:
     addi a1, a1, %lo(filename)               
     addi a2, x0, 0             # Read-only mode              
     addi a7, x0, 56            # Syscall number for openat
-    ecall
-    bltz a0, exit_error        # Exit if open failed
+    ecall     
+    blt a0, x0, exit_error     # Exit if open failed
 
 read_loop:
     # Read from file
@@ -59,9 +59,9 @@ read_loop:
     lui a2, 1                  # Load upper immediate with 1, which represents 1 << 12 = 4096
     addi a2, a2, -2048         # Subtract 2048 to adjust the value down to 2048                       
     addi a7, x0, 63            # Syscall number for read
-    ecall
-    bltz a0, read_error        # Exit if read failed
-    beqz a0, close_file        # End of file (read 0 bytes)
+    ecall     
+    blt a0, x0, read_error     # Exit if read failed
+    beq a0, x0, close_file     # End of file (read 0 bytes)
               
     addi t3, x0, 1             # Count words            
     addi t4, x0, 0             # Count sentences                 
@@ -78,8 +78,8 @@ read_loop:
 
 count_everything:
     addi s1, t5, 0             # Load previous byte
-    lb t5, 0(t1)               # Load byte from buffer
-    beqz t5, done_count        # If the byte is 0 (end of string), exit loop
+    lb t5, 0(t1)               # Load byte from buffer     
+    beq t5, x0, done_count     # If the byte is 0 (end of string), exit loop
               
     addi t6, x0, 32            # Space in ASCII
     beq t5, t6, increment_space               
@@ -105,25 +105,25 @@ go:
 skip:
     addi t1, t1, 1             # Move buffer pointer to next byte              
     addi s2, x0, 1             # Flag we are no longer in first bit
-    j count_everything
+    jal x0, count_everything
 
 increment_space:
     beq s2, zero, skip         # If bit is the first bit - we skip
     beq s1, t5, skip           # If bit is the same as last bit - we skip
     addi t3, t3, 1             # Increment space counter
     addi t1, t1, 1             # Move buffer pointer to next byte
-    j count_everything
+    jal x0, count_everything
 
 increment_sentence:
     beq s2, zero, skip         # If bit is the first bit - we skip
     beq s1, t5, skip           # If bit is the same as last bit - we skip
     addi t4, t4, 1             # Increment sentence counter
     addi t1, t1, 1             # Move buffer pointer to next byte
-    j count_everything
+    jal x0, count_everything
 
 add_last:
     addi t3, t3, -1            # Lower the word counter
-    j write
+    jal x0, write
     
 done_count:
     # Check if last bit was space or new line - lower word counter              
@@ -139,10 +139,9 @@ write:
     lui a1, %hi(bufferf)       # Load buffer again
     addi a1, a1, %lo(bufferf)       
     addi a7, x0, SYS_WRITE     # Syscall number for write
-    ecall
-    bltz a0, write_error       # Exit if write failed
-
-    j read_loop                # Continue reading
+    ecall   
+    blt a0, x0, write_error    # Exit if write failed
+    jal x0, read_loop          # Continue reading
 
 close_file:
     # Close the file             
@@ -212,7 +211,9 @@ print:
     add s11, zero, ra
     lui a1, %hi(bufferf)
     addi a1, a1, %lo(bufferf)
-    call itoa
+    lui ra, %hi(itoa)          # Load the upper 20 bits of the absolute address of 'itoa'
+    addi ra, ra, %lo(itoa)     # Add the lower 12 bits to complete the address
+    jalr ra                    # Jump to the address
     addi a7, x0, SYS_WRITE
     addi a0, x0, STDOUT
     lui a1, %hi(bufferf)
