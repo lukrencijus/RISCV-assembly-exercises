@@ -52,7 +52,9 @@ _start:
 read_loop:
     # Read from file
     la a1, bufferf             
-    li a2, 2048                # Buffer size (2kb)                        
+    # Buffer size (2kb)
+    lui a2, 1                  # Load upper immediate with 1, which represents 1 << 12 = 4096
+    addi a2, a2, -2048         # Subtract 2048 to adjust the value down to 2048                       
     addi a7, x0, 63            # Syscall number for read
     ecall
     bltz a0, read_error        # Exit if read failed
