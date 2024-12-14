@@ -68,8 +68,8 @@ read_loop:
     li s4, 'Z'
     li s5, 'a'
     li s6, 'z'
-    li s7, 0                   # Uppercase letter counter
-    li s8, 0                   # Lowercase letter counter
+    li s8, 0                   # Uppercase letter counter
+    li s9, 0                   # Lowercase letter counter
 
 count_everything:
     mv s1, t5                  # Load previous byte 
@@ -90,12 +90,12 @@ count_everything:
 
     blt t5, s3, go             # Check uppercase letters
     bgt t5, s4, go
-    addi s7, s7, 1             # Increment uppercase letter counter
+    addi s8, s8, 1             # Increment uppercase letter counter
 
 go:
     blt t5, s5, skip           # Check lowercase letters 
     bgt t5, s6, skip
-    addi s8, s8, 1             # Increment lowercase letter counter
+    addi s9, s9, 1             # Increment lowercase letter counter
 
 skip:
     addi t1, t1, 1             # Move buffer pointer to next byte
@@ -171,7 +171,7 @@ close_file:
     li a7, SYS_WRITE           # System call code for write
     ecall                      # Make the syscall
     # print the uppercase letter count
-    add a0, zero, s7
+    add a0, zero, s8
     jal ra, print
 
     # print string "Lowercase letter count: "
@@ -181,7 +181,7 @@ close_file:
     li a7, SYS_WRITE           # System call code for write
     ecall                      # Make the syscall
     # print the lowercase letter count
-    add a0, zero, s8
+    add a0, zero, s9
     jal ra, print
 
     # Exit successfully
@@ -199,38 +199,45 @@ exit_error:
 
 # Print ASCII integers
 print:
-    add s6, zero, ra
+    add s11, zero, ra
     la a1, bufferf
     call itoa
     li a7, SYS_WRITE
     li a0, STDOUT
     la a1, bufferf
-    li a2, 4
+    li a2, 5
     ecall
-    add ra, zero, s6
+    add ra, zero, s11
     ret
 
 # integer to ASCII
 itoa:
-    # Simple conversion for a three-digit number
-    li s0, 100                 # Load divisor 100 into s0
-    divu s1, a0, s0            # Divide a0 by 100, result in s1
-    remu s2, a0, s0            # Get remainder of a0 / 100, result in s2
+    # Conversion for a four-digit number
+    li s0, 1000               # Load divisor 1000 into s0
+    divu s1, a0, s0           # Divide a0 by 1000, result in s1 (thousands place)
+    remu s2, a0, s0           # Get remainder of a0 / 1000, result in s2
 
-    li s0, 10                  # Load divisor 10 into s0 for next step
-    divu s3, s2, s0            # Divide s2 by 10, result in s3
-    remu s4, s2, s0            # Get remainder of s2 / 10, result in s4
+    li s0, 100                # Load divisor 100 into s0
+    divu s3, s2, s0           # Divide s2 by 100, result in s3 (hundreds place)
+    remu s4, s2, s0           # Get remainder of s2 / 100, result in s4
 
-    addi s1, s1, '0'           # Convert first digit to ASCII
-    sb s1, 0(a1)               # Store first digit at buffer
+    li s0, 10                 # Load divisor 10 into s0
+    divu s5, s4, s0           # Divide s4 by 10, result in s5 (tens place)
+    remu s6, s4, s0           # Get remainder of s4 / 10, result in s6 (ones place)
 
-    addi s3, s3, '0'           # Convert second digit to ASCII
-    sb s3, 1(a1)               # Store second digit at buffer + 1
+    addi s1, s1, '0'          # Convert thousands digit to ASCII
+    sb s1, 0(a1)              # Store thousands digit at buffer
 
-    addi s4, s4, '0'           # Convert third digit to ASCII
-    sb s4, 2(a1)               # Store third digit at buffer + 2
+    addi s3, s3, '0'          # Convert hundreds digit to ASCII
+    sb s3, 1(a1)              # Store hundreds digit at buffer + 1
 
-    li s5, '\n'                # Newline character
-    sb s5, 3(a1)               # Store newline at buffer + 3
+    addi s5, s5, '0'          # Convert tens digit to ASCII
+    sb s5, 2(a1)              # Store tens digit at buffer + 2
 
-    ret                        # Return from function
+    addi s6, s6, '0'          # Convert ones digit to ASCII
+    sb s6, 3(a1)              # Store ones digit at buffer + 3
+
+    li s7, '\n'               # Newline character
+    sb s7, 4(a1)              # Store newline at buffer + 4
+
+    ret                       # Return from function
